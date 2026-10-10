@@ -1,0 +1,569 @@
+#!/usr/bin/env python3
+"""Build the OB-Xd panel skin for the MPC from an OB-Xd theme folder.
+
+  python3 tools/make_skin.py skin-source/"Default Skin" [--width 1280]      # the bundled community skin (CC BY-SA 3.0)
+  python3 tools/make_skin.py "<...>/discoDSP/OB-Xd/Themes/discoDSP Classic"  # a theme from your own install (private use only)
+
+Reads the theme's own artwork (main, knob, button, voices, legato; the @4x versions when the theme has
+them) and coords.xml, scales it ONCE to the exact size the MPC will show (so nothing is resampled on
+the device and text stays sharp), writes vst/layout.conf and vst/images/*, and points vst.json at them
+("layout", "art": "html").
+The artwork belongs to its authors. The bundled community skin (gitterdude, CC BY-SA 3.0) may be redistributed with credit;
+anything built from a theme of your own install (e.g. discoDSP Classic) must stay on your computer.
+"""
+import argparse, json, os, re, shutil, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from PIL import Image
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+VST = os.path.join(ROOT, "vst")
+
+AREA_W, AREA_H = 1280, 628     # MPC plugin area (the screen is 1280x800; the top bar and tabs take the rest)
+Y_OFF = 86                     # layout y of the plugin area's top edge (layouts are 1280x800)
+LZ = Image.LANCZOS
+
+# coords.xml NAME -> (param key, kind). kind: knob | toggle | voices | legato
+MAP = {
+ "volumeKnob": ("volume", "knob"), "tuneKnob": ("tune", "knob"), "transposeKnob": ("octave", "knob"),
+ "voiceDetuneKnob": ("udet", "knob"), "unisonButton": ("unison", "toggle"), "portamentoKnob": ("portamento", "knob"),
+ "legatoSwitch": ("legatomode", "legato"), "voiceSwitch": ("voice_count", "voices"),
+ "asPlayedAllocButton": ("asplayedallocation", "toggle"),
+ "bendOsc2OnlyButton": ("bendosc2", "toggle"), "bendRangeButton": ("bendrange", "toggle"),
+ "bendLfoRateKnob": ("bendlforate", "knob"), "veloFltEnvKnob": ("vfltenv", "knob"), "veloAmpEnvKnob": ("vampenv", "knob"),
+ "osc1PitchKnob": ("osc1p", "knob"), "pulseWidthKnob": ("pw", "knob"), "osc2PitchKnob": ("osc2p", "knob"),
+ "xmodKnob": ("xmod", "knob"), "osc2DetuneKnob": ("osc2_det", "knob"), "pitchQuantButton": ("oscquantize", "toggle"),
+ "envPitchModKnob": ("envpitch", "knob"), "brightnessKnob": ("brightness", "knob"),
+ "osc1MixKnob": ("osc1mix", "knob"), "osc2MixKnob": ("osc2mix", "knob"), "noiseMixKnob": ("noisemix", "knob"),
+ "cutoffKnob": ("cutoff", "knob"), "resonanceKnob": ("resonance", "knob"), "filterEnvelopeAmtKnob": ("envelope_amt", "knob"),
+ "multimodeKnob": ("multimode", "knob"), "filterKeyFollowButton": ("flt_kf", "toggle"),
+ "filterBPBlendButton": ("bandpass", "toggle"), "fourPoleButton": ("fourpole", "toggle"), "filterHQButton": ("filter_warm", "toggle"),
+ "attackKnob": ("latk", "knob"), "decayKnob": ("ldec", "knob"), "sustainKnob": ("lsus", "knob"), "releaseKnob": ("lrel", "knob"),
+ "fattackKnob": ("fatk", "knob"), "fdecayKnob": ("fdec", "knob"), "fsustainKnob": ("fsus", "knob"), "freleaseKnob": ("frel", "knob"),
+ "lfoFrequencyKnob": ("lfofreq", "knob"), "lfoAmt1Knob": ("lfo1amt", "knob"), "lfoAmt2Knob": ("lfo2amt", "knob"),
+ "lfoSinButton": ("lfosinwave", "toggle"), "lfoSquareButton": ("lfosquarewave", "toggle"), "lfoSHButton": ("lfoshwave", "toggle"),
+ "lfoOsc1Button": ("lfoosc1", "toggle"), "lfoOsc2Button": ("lfoosc2", "toggle"), "lfoFilterButton": ("lfofilter", "toggle"),
+ "lfoPwm1Button": ("lfopw1", "toggle"), "lfoPwm2Button": ("lfopw2", "toggle"),
+ "hardSyncButton": ("osc2hs", "toggle"), "osc1SawButton": ("osc1saw", "toggle"), "osc2SawButton": ("osc2saw", "toggle"),
+ "osc1PulButton": ("osc1pul", "toggle"), "osc2PulButton": ("osc2pul", "toggle"),
+ "filterDetuneKnob": ("filterder", "knob"), "envelopeDetuneKnob": ("envder", "knob"), "portamentoDetuneKnob": ("portader", "knob"),
+}
+for i in range(1, 9):
+    MAP["pan%dKnob" % i] = ("pan%d" % i, "knob")
+
+# not on the panel: the second page (same knobs and buttons as the panel, bigger)
+MORE_KNOBS = [("master_hz", "FREQUENCY (HZ)"), ("pw_env", "PW ENV"), ("pw_osc2_ofs", "PW OSC2 OFS"), ("level_dif", "LEVEL DIFF")]
+MORE_TOGGLES = [("pw_env_both", "PW ENV BOTH"), ("env_pitch_both", "PITCH ENV BOTH"), ("fenv_invert", "FENV INVERT"),
+                ("self_osc_push", "SELF-OSC PUSH"), ("lfo_sync", "LFO SYNC"), ("economy_mode", "ECONOMY")]
+
+# LFO SYNC button + TEMPO display (the project's tempo), in the MODULATION section's free slot and the strip under it. Panel-image px.
+SYNC_CX, SYNC_CY, SYNC_LABEL_CY = 860, 532, 565         # the button's centre and its label's centre
+TEMPO_CX, TEMPO_CY, TEMPO_W, TEMPO_H = 1167, 28, 154, 48        # top right corner
+LFO_WORD_BOX, SYNC_WORD_BOX = (680, 356, 706, 371), (320, 311, 369, 327)    # where the theme prints "LFO RATE" and "SYNC"
+
+# BANK / PATCH selector geometry (plugin-area pixels): display width, button width, strip top and height; groups = (x0, key)
+SEL_DW, SEL_BW, SEL_GAP, SEL_Y0, SEL_H = 192, 56, 4, 4, 48
+# a group is the stacked up/down button (left) then the display; x0 is the group's left edge. Two groups, 16 px apart, centred on x=640
+SEL_GROUPS = [(320, "bank"), (648, "patch")]      # group = left arrow (56), display (192), right arrow (56); 16 px apart, centred on x=640
+
+# Bigger controls for big hands (0.3.0). The theme's pictures are scaled up by these factors; the buttons' pictures carry a
+# transparent margin, which is the extra touch area (a toggle's touch box is its picture); knobs get a bigger touch box.
+KNOB_UP = 1.36           # knob picture (frame incl. shadow) 50 -> 68 px; every knob has this size
+BTN_UP = 1.12            # button pictures 41 -> 46 px; every button has this size (VAM and STOP: BIG_BTN)
+LEG_UP = 1.3             # the legato and voices displays
+BIG_BTN = 68             # VAM and STOP have the room, so they are bigger
+PAD_X, PAD_Y = 1, 4      # transparent margin round each button picture (px each side)
+# The OB-Xd logo is drawn smaller and higher, and the left column's sections (MASTER, GLOBAL, LEGATO/VOICES) move up by these
+# amounts (plugin-area px) so the whole panel has more air for the bigger controls. Slabs are (y0, y1, dy) of the panel image.
+LOGO_BOX, LOGO_SCALE, LOGO_TOP = (40, 58, 280, 150), 0.66, 12
+# (y0, y1, dy, band): the band is the run of blank panel rows (y0, y1) that fills the gap above the slab (mirrored back and forth)
+LEFT_SLABS = [(160, 208, -62, (150, 162)), (208, 260, -36, (199, 207)), (260, 285, -25, (199, 207)), (296, 348, -26, (276, 288)),
+              (348, 394, -21, (338, 347)), (394, 420, -8, (338, 347)), (425, 495, 4, (408, 420)), (548, 580, 14, (500, 510))]
+TAIL_BAND = (500, 510)
+LEFT_X = (30, 287)
+KEY_DY = {"volume": -36, "tune": -36, "octave": -36, "udet": -21, "unison": -21, "portamento": -21,
+          "legatomode": 4, "voice_count": 4}
+# the two knobs squeezed between buttons (OSC2 DETUNE, MULTIMODE) are a little smaller, and their neighbours move out a few px
+# MASTER and GLOBAL have the room: bigger knobs, centred between the section line and the printed labels
+BIG_UP = 1.35
+KNOB_UP_KEY = {}     # (per-control knob sizes: none, all knobs are the same size)
+KNOB_EXTRA = {"volume": 4, "tune": 4, "octave": 4, "udet": 3, "portamento": 3, "unison": 3}   # px down, to centre them
+KEY_DX = {"osc1saw": -3, "osc1pul": -5, "osc2saw": 5, "osc2pul": 3,       # the rows with a knob between four buttons:
+          "flt_kf": -3, "filter_warm": -5, "bandpass": 5, "fourpole": 3}   # spread out so nothing overlaps
+BIG_Y = 541              # area y of the VAM / STOP buttons' centre
+UP_SHIFT = 2             # px the bigger controls move up, to keep the printed labels clear below them
+
+QLINKS = ["cutoff", "resonance", "envelope_amt", "multimode", "fatk", "fdec", "fsus", "frel",
+          "latk", "ldec", "lsus", "lrel", "volume", "lfofreq", "lfo1amt", "osc2_det"]
+
+
+def pick(theme, name):
+    """The theme's sharpest copy of an image: @4x, then @2x, then the base file."""
+    for suffix in ("@4x", "@2x", ""):
+        p = os.path.join(theme, name.replace(".png", suffix + ".png"))
+        if os.path.isfile(p):
+            return p
+    sys.exit("theme is missing %s" % name)
+
+
+def frames_of(path, n):
+    """Cut a filmstrip into n equal frames, top to bottom."""
+    im = Image.open(path).convert("RGBA")
+    h = im.height // n
+    return [im.crop((0, i * h, im.width, (i + 1) * h)) for i in range(n)]
+
+
+
+# ---------------------------------------------------------------------------------------------------------------
+# Re-labelling the GLOBAL panel's bottom row. The theme prints "VAM  LEARN  CLEAR" into main.png. The port has no
+# MIDI learn, so the row becomes two centred buttons, "VAM" and "STOP". The letters are lifted from the theme's own
+# printed labels (STEP, OSC1, VAM) so the font matches. Pure Python on small crops (no numpy needed).
+# ---------------------------------------------------------------------------------------------------------------
+def _lum(px):
+    return 0.299 * px[0] + 0.587 * px[1] + 0.114 * px[2]
+
+
+def _letters(img, box, thr=40):
+    """Letters inside box (x0,y0,x1,y1) of an RGB image: [(RGBA glyph, (x0,y0,x1,y1) in img coords)], left to right.
+    A letter is an 8-connected blob brighter than its row's background; alpha comes from that brightness."""
+    x0, y0, x1, y1 = box
+    c = img.crop(box).convert("RGB")
+    w, h = c.size
+    px = c.load()
+    bg = []
+    for y in range(h):
+        row = sorted(_lum(px[x, y]) for x in range(w))
+        bg.append(row[len(row) // 2])
+    on = [[(_lum(px[x, y]) - bg[y]) > thr for x in range(w)] for y in range(h)]
+    seen = [[False] * w for _ in range(h)]
+    blobs = []
+    for y in range(h):
+        for x in range(w):
+            if on[y][x] and not seen[y][x]:
+                stack, pts = [(x, y)], []
+                seen[y][x] = True
+                while stack:
+                    cx, cy = stack.pop()
+                    pts.append((cx, cy))
+                    for dx in (-1, 0, 1):
+                        for dy in (-1, 0, 1):
+                            nx, ny = cx + dx, cy + dy
+                            if 0 <= nx < w and 0 <= ny < h and on[ny][nx] and not seen[ny][nx]:
+                                seen[ny][nx] = True
+                                stack.append((nx, ny))
+                if len(pts) > 60:
+                    blobs.append(pts)
+    ink_pts = [px[x, y] for pts in blobs for (x, y) in pts]
+    if not ink_pts:
+        return []
+    ink_pts.sort(key=_lum)
+    top = ink_pts[-max(1, len(ink_pts) // 5):]
+    ink = tuple(int(sum(p[i] for p in top) / len(top)) for i in range(3))
+    span = max(1.0, _lum(ink) - sum(bg) / len(bg))
+    out = []
+    for pts in sorted(blobs, key=lambda b: min(p[0] for p in b)):
+        bx0, bx1 = min(p[0] for p in pts) - 3, max(p[0] for p in pts) + 4
+        by0, by1 = min(p[1] for p in pts) - 3, max(p[1] for p in pts) + 4
+        near = set()
+        for (x, y) in pts:                                  # the blob and its anti-aliased fringe, not neighbouring letters
+            for dx in range(-3, 4):
+                for dy in range(-3, 4):
+                    near.add((x + dx, y + dy))
+        g = Image.new("RGBA", (bx1 - bx0, by1 - by0), ink + (0,))
+        gp = g.load()
+        for (x, y) in near:
+            if bx0 <= x < bx1 and by0 <= y < by1 and 0 <= x < w and 0 <= y < h:
+                a = (_lum(px[x, y]) - bg[y]) / span
+                gp[x - bx0, y - by0] = ink + (int(max(0.0, min(1.0, a)) * 255),)
+        out.append((g, (x0 + bx0, y0 + by0, x0 + bx1, y0 + by1)))
+    return out
+
+
+def _word(img, box, thr=18):
+    """The printed word inside box (x0,y0,x1,y1) of an RGB image as an RGBA picture trimmed to its ink (alpha = brightness over the
+    row's background), or None. Unlike _letters it does not split into letters."""
+    x0, y0, x1, y1 = box
+    c = img.crop(box).convert("RGB")
+    w, h = c.size
+    px = c.load()
+    bgl = []
+    for y in range(h):
+        row = sorted(_lum(px[x, y]) for x in range(w))
+        bgl.append(row[len(row) // 2])
+    al = [[_lum(px[x, y]) - bgl[y] for x in range(w)] for y in range(h)]
+    pts = [(x, y) for y in range(h) for x in range(w) if al[y][x] > thr]
+    if not pts:
+        return None
+    xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+    ink_src = sorted((px[x, y] for (x, y) in pts), key=_lum)
+    top = ink_src[-max(1, len(ink_src) // 5):]
+    ink = tuple(int(sum(p[i] for p in top) / len(top)) for i in range(3))
+    span = max(1.0, max(al[y][x] for (x, y) in pts))
+    m = 3
+    bx0, bx1, by0, by1 = max(0, min(xs) - m), min(w, max(xs) + m + 1), max(0, min(ys) - m), min(h, max(ys) + m + 1)
+    out = Image.new("RGBA", (bx1 - bx0, by1 - by0), ink + (0,))
+    op = out.load()
+    for y in range(by0, by1):
+        for x in range(bx0, bx1):
+            op[x - bx0, y - by0] = ink + (int(max(0.0, min(1.0, al[y][x] / span)) * 255),)
+    return out
+
+
+# Where the label glyphs we reuse sit in each theme's main image, in the theme's own base pixels (x0, y0, x1, y1).
+GLYPHS = {
+    # letters of STOP, each lifted from a label the theme prints itself: (box in base px, index among the letters found there, how many are expected)
+    "classic": dict(squares=False, vam_dy=True,
+                    S=((398, 214, 448, 234), 0, 4), T=((398, 214, 448, 234), 1, 4), O=((276, 86, 320, 104), 0, 4), P=((398, 214, 448, 234), 3, 4)),
+    "default": dict(squares=True, vam=(100, 462, 142, 481),
+                    S=((968, 86, 1028, 102), 0, 7),    # SUSTAIN
+                    T=((968, 86, 1028, 102), 3, 7),    # SUSTAIN
+                    O=((292, 90, 332, 108), 0, 4),     # OSC1
+                    P=((358, 90, 396, 108), 0, 2)),    # PW
+}
+
+
+def relabel_global(im, items):
+    """im: the theme's main image (RGB, any resolution). Returns (new image, (vam_x, stop_x) button centres in base px, theme kind)."""
+    kind = "default" if "menu" in items else "classic"
+    cfg = GLYPHS[kind]
+    k = im.width / float(items["guisize"]["x"])
+    def B(*v):
+        return tuple(int(round(t * k)) for t in v)
+    names = [n for n in ("menu", "asPlayedAllocButton", "midiLearnButton", "midiUnlearnButton") if n in items]
+    vam = items["asPlayedAllocButton"]
+    bw = float(vam.get("w", 28))
+    bh = float(vam.get("h", 35))
+    row_y0 = float(vam["y"]) + bh + 1                               # just under the buttons
+    left = min(float(items[n]["x"]) for n in names)
+    right = max(float(items[n]["x"]) for n in names) + bw
+    vbox = B(*cfg["vam"]) if "vam" in cfg else B(left - 4, row_y0, left + 40, row_y0 + 22)
+    vam_l = _letters(im, vbox)
+    glyph = {}
+    for ch in "STOP":
+        box, idx, n = cfg[ch]
+        found = _letters(im, B(*box))
+        if len(found) != n:
+            glyph = None
+            break
+        glyph[ch] = found[idx][0]
+    if len(vam_l) != 3 or glyph is None:
+        sys.stderr.write("note: the theme's labels were not where the known themes have them: leaving the bottom row as printed\n")
+        return im, None, kind
+    S_, T_, O_, P_ = (glyph[c] for c in "STOP")
+    (vy0, vy1) = (min(b[1] for _, b in vam_l), max(b[3] for _, b in vam_l))
+    cy = (vy0 + vy1) // 2
+    # erase the old row (labels, and for some themes the button recesses): every pixel row is blended between the clean
+    # panel texture just left and just right of the group
+    if cfg["squares"]:
+        sy0, sy1 = B(0, float(vam["y"]) - 4, 0, 0)[1], B(0, row_y0 + 30, 0, 0)[1]
+    else:
+        sy0, sy1 = B(0, row_y0, 0, 0)[1], B(0, row_y0 + 22, 0, 0)[1]
+    ex0, ex1 = B(left - 8, 0, 0, 0)[0], B(right + 8, 0, 0, 0)[0]
+    out = im.copy()
+    op, ip = out.load(), im.load()
+    wlen = max(2, int(3 * k))
+    for y in range(sy0, min(sy1, im.height)):
+        lc = [ip[x, y] for x in range(ex0 - wlen - int(4 * k), ex0 - int(4 * k))]
+        rc = [ip[x, y] for x in range(ex1 + int(4 * k), ex1 + int(4 * k) + wlen)]
+        ml = tuple(sum(c[i] for c in lc) // len(lc) for i in range(3))
+        mr = tuple(sum(c[i] for c in rc) // len(rc) for i in range(3))
+        for x in range(ex0, ex1):
+            t = (x - ex0) / float(max(1, ex1 - ex0 - 1))
+            op[x, y] = tuple(int(ml[i] * (1 - t) + mr[i] * t) for i in range(3))
+    # two buttons, centred on the old group: the group's middle, +-32 base px
+    mid = (left + right) / 2.0
+    vam_cx, stop_cx = mid - 32.0, mid + 32.0
+    out = out.convert("RGBA")
+    # VAM: keep the printed word exactly as drawn (V, A, M at their original offsets)
+    x_first, x_last = vam_l[0][1][0], vam_l[-1][1][2]
+    w_vam = x_last - x_first
+    ox = int(round(vam_cx * k)) - w_vam // 2
+    for g, b in vam_l:
+        out.alpha_composite(g, (ox + b[0] - x_first, b[1]))
+    # STOP: S T O P with the theme's own letter spacing
+    gap = int(round(0.5 * k))
+    word = [S_, T_, O_, P_]
+    ww = sum(g.width for g in word) + gap * 3 - 6 * 3                # glyphs carry 3 px of margin each side
+    ox = int(round(stop_cx * k)) - ww // 2
+    for g in word:
+        gy = cy - g.height // 2
+        out.alpha_composite(g, (ox, gy))
+        ox += g.width + gap - 6
+    return out.convert("RGB"), (vam_cx, stop_cx), kind
+
+
+def gradient_column(im, items, x_base, y0_base, y1_base):
+    """A vertical run of the panel's own body colours (list of RGB), to paint matching panels elsewhere."""
+    k = im.width / float(items["guisize"]["x"])
+    px = im.convert("RGB").load()
+    x = int(x_base * k)
+    return [px[x, y] for y in range(int(y0_base * k), int(y1_base * k))]
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("theme")
+    ap.add_argument("--width", type=int, default=AREA_W,
+                    help="panel width in px (default 1280 = the whole screen width; use ~1020 to stay clear of the Q-Link sidebar)")
+    a = ap.parse_args()
+    theme = a.theme
+
+    txt = open(os.path.join(theme, "coords.xml"), encoding="latin-1").read()
+    txt = re.sub(r"<!--.*?-->", "", txt, flags=re.S)
+    items = {}
+    for m in re.finditer(r"<VALUE\s+([^>]*?)/>", txt):
+        d = dict(re.findall(r'(\w+)="([^"]*)"', m.group(1)))
+        items[d["NAME"]] = d
+    gw, gh = float(items["guisize"]["x"]), float(items["guisize"]["y"])
+    S = a.width / gw
+    PW, PH = round(gw * S), round(gh * S)
+    X0 = (AREA_W - PW) / 2.0                    # panel left edge (layout x)
+    ypad = (AREA_H - PH) // 2                   # panel top inside the plugin area
+    Y0 = Y_OFF + ypad
+
+    img = os.path.join(VST, "images")
+    shutil.rmtree(img, ignore_errors=True)
+    os.makedirs(img)
+
+    # background: the panel at its exact size; the strip above/below (and beside, for a narrow panel) is the panel's own edge
+    raw_main = Image.open(pick(theme, "main.png")).convert("RGB")
+    raw_main, btn_pos, kind = relabel_global(raw_main, items)          # VAM + STOP instead of VAM / LEARN / CLEAR
+    main_img = raw_main.convert("RGBA").resize((PW, PH), LZ)
+    bg = Image.new("RGBA", (AREA_W, AREA_H))
+    px = int(X0)
+    bg.paste(main_img, (px, ypad))
+    if ypad > 0:
+        # extend the panel up and down with its own edge texture, mirrored back and forth (a stretched 1 px row would streak)
+        bh_ = max(4, int(9 * S))
+        def idx(d):
+            j = d % (2 * bh_)
+            return j if j < bh_ else 2 * bh_ - 1 - j
+        for d in range(ypad):
+            bg.paste(main_img.crop((0, idx(d), PW, idx(d) + 1)), (px, ypad - 1 - d))
+        for d in range(AREA_H - ypad - PH):
+            bg.paste(main_img.crop((0, PH - 1 - idx(d), PW, PH - idx(d))), (px, ypad + PH + d))
+    if px > 0:
+        bg.paste(bg.crop((px, 0, px + 1, AREA_H)).resize((px, AREA_H)), (0, 0))
+        bg.paste(bg.crop((px + PW - 1, 0, px + PW, AREA_H)).resize((AREA_W - px - PW, AREA_H)), (px + PW, 0))
+    from PIL import ImageDraw as _D
+    # the logo, lifted from the theme's picture (with a soft edge) and drawn smaller on the redrawn panel
+    lg = bg.crop(LOGO_BOX)
+    lw_, lh_ = int(lg.width * LOGO_SCALE), int(lg.height * LOGO_SCALE)
+    lg = lg.resize((lw_, lh_), LZ)
+    mk = Image.new("L", (lw_, lh_), 255)
+    mkp = mk.load()
+    for yy in range(lh_):
+        for xx in range(lw_):
+            e = min(xx, yy, lw_ - 1 - xx, lh_ - 1 - yy)
+            if e < 8:
+                mkp[xx, yy] = int(255 * e / 8.0)
+    lg.putalpha(mk)
+    base_px = [bg.convert("RGB").getpixel(pt) for pt in ((300, 610), (160, 610), (1000, 610), (640, 610), (1180, 612))]
+    base_rgb = tuple(sorted(c[i] for c in base_px)[len(base_px) // 2] for i in range(3))
+    import panel_draw
+    placements = panel_draw.draw(bg, base_rgb, lg, SEL_GROUPS, SEL_DW, SEL_BW, SEL_GAP, SEL_Y0, SEL_H,
+                                 (TEMPO_CX - TEMPO_W // 2, TEMPO_CY - TEMPO_H // 2, TEMPO_CX + TEMPO_W // 2, TEMPO_CY + TEMPO_H // 2))
+    for left in (True, False):
+        for st, fill in (("off", (42, 40, 35)), ("on", (96, 88, 74))):
+            k4 = 4
+            w4, h4 = SEL_BW * k4, SEL_H * k4
+            a_ = Image.new("RGBA", (w4, h4), (0, 0, 0, 0))
+            ad = _D.Draw(a_)
+            ad.rounded_rectangle([0, 0, w4 - 1, h4 - 1], radius=6 * k4, fill=fill + (255,),
+                                 corners=(True, False, False, True) if left else (False, True, True, False))
+            ad.rectangle([0, 0, 2 * k4 - 1, h4] if not left else [w4 - 2 * k4, 0, w4, h4], fill=(18, 16, 13, 255))    # dark line at the display side
+            cx_, cy_, tw, th = w4 / 2 + (-1 if left else 1) * k4, h4 / 2, 9 * k4, 11 * k4
+            tri = [(cx_ + tw / 2, cy_ - th), (cx_ + tw / 2, cy_ + th), (cx_ - tw, cy_)] if left else \
+                  [(cx_ - tw / 2, cy_ - th), (cx_ - tw / 2, cy_ + th), (cx_ + tw, cy_)]
+            ad.polygon(tri, fill=(200, 204, 212, 255))
+            a_.resize((SEL_BW, SEL_H), LZ).save(os.path.join(img, "sel_%s_%s.png" % ("left" if left else "right", st)))
+    bg.convert("RGB").save(os.path.join(img, "panel.png"))
+    plate = "%02x%02x%02x" % bg.getpixel((AREA_W // 2, 2))[:3]
+
+    # knobs: the theme's picture is 48 px for a 42 px knob (the rest is its shadow). Each knob size gets its own
+    # strip whose frame is F x F, F = 2r+8, which is exactly the box the skin builder draws a frame into: 1:1, no resampling.
+    knob_frames = frames_of(pick(theme, "knob.png"), 128)
+    rK = (panel_draw.KF - 8) // 2                                   # every knob has this size
+    FK = 2 * rK + 8
+    o = Image.new("RGBA", (FK, FK * 128))
+    for i, fr in enumerate(knob_frames):
+        o.paste(fr.resize((FK, FK), LZ), (0, i * FK))
+    o.save(os.path.join(img, "knob_%d.png" % FK))
+    knob_path = "images/knob_%d.png" % FK
+
+    # buttons (on/off)
+    bw0, bh0 = float(items["unisonButton"].get("w", 28)), float(items["unisonButton"].get("h", 35))
+    BW, BH = round(bw0 * S), round(bh0 * S)
+    off, on = frames_of(pick(theme, "button.png"), 2)
+    TW, TH = round(BW * BTN_UP), round(BH * BTN_UP)               # the visible button
+    BW, BH = TW + 2 * PAD_X, TH + 2 * PAD_Y                       # the picture: the button plus a transparent margin (= touch area)
+    for fr, nm in ((off, "btn_off.png"), (on, "btn_on.png")):
+        pic = Image.new("RGBA", (BW, BH), (0, 0, 0, 0))
+        pic.alpha_composite(fr.resize((TW, TH), LZ), (PAD_X, PAD_Y))
+        pic.save(os.path.join(img, nm))
+
+    LBW, LBH = BIG_BTN + 2 * PAD_X, BIG_BTN + 2 * PAD_Y                  # VAM and STOP
+    for fr, nm in ((off, "btn_big_off.png"), (on, "btn_big_on.png")):
+        pic = Image.new("RGBA", (LBW, LBH), (0, 0, 0, 0))
+        pic.alpha_composite(fr.resize((BIG_BTN, BIG_BTN), LZ), (PAD_X, PAD_Y))
+        pic.save(os.path.join(img, nm))
+
+    # voice count digits (OB-Xd 2.10 has 8 voices) and legato labels (4)
+    vw, vh = float(items["voiceSwitch"].get("w", 38)), float(items["voiceSwitch"].get("h", 32))
+    VW, VH = round(vw * S * LEG_UP), round(vh * S * LEG_UP)
+    vf = frames_of(pick(theme, "voices.png"), 32)[:8]
+    o = Image.new("RGBA", (VW, VH * 8))
+    for i, fr in enumerate(vf):
+        o.paste(fr.resize((VW, VH), LZ), (0, i * VH))
+    o.save(os.path.join(img, "voices8.png"))
+    lw, lh = float(items["legatoSwitch"].get("w", 89)), float(items["legatoSwitch"].get("h", 32))
+    LW, LH = round(lw * S * LEG_UP), round(lh * S * LEG_UP)
+    lf = frames_of(pick(theme, "legato.png"), 4)
+    o = Image.new("RGBA", (LW, LH * 4))
+    for i, fr in enumerate(lf):
+        o.paste(fr.resize((LW, LH), LZ), (0, i * LH))
+    o.save(os.path.join(img, "legato.png"))
+
+    # MORE page: the same knob artwork, bigger (F=96), the same buttons, on a plate with panels like the main page's
+    MF = 96
+    mo = Image.new("RGBA", (MF, MF * 128))
+    for i, fr in enumerate(knob_frames):
+        mo.paste(fr.resize((MF, MF), LZ), (0, i * MF))
+    mo.save(os.path.join(img, "knob_%d.png" % MF))
+    MBW, MBH = 52, 65
+    off.resize((MBW, MBH), LZ).save(os.path.join(img, "more_btn_off.png"))
+    on.resize((MBW, MBH), LZ).save(os.path.join(img, "more_btn_on.png"))
+    # panel body colours from the theme (a clean strip inside the GLOBAL panel), stretched over each MORE panel
+    if kind == "default":
+        col = gradient_column(raw_main, items, 33, 20, 460)        # the clean strip between the wood and the first section
+        n3 = max(1, len(col) // 3)
+        c0 = tuple(sum(c[i] for c in col[:n3]) // n3 for i in range(3))
+        c1 = tuple(sum(c[i] for c in col[-n3:]) // n3 for i in range(3))
+        # the texture wobbles; use a smooth top-to-bottom gradient of the same colours
+        grad = [tuple(int(c0[i] + (c1[i] - c0[i]) * t / 99.0) for i in range(3)) for t in range(100)]
+        kk = raw_main.width / float(items["guisize"]["x"])
+        rp = raw_main.convert("RGB").load()
+        blue = max((rp[x, y] for x in range(int(60 * kk), int(240 * kk), 3) for y in range(int(100 * kk), int(160 * kk))),
+                   key=lambda c: c[2] - c[0])
+    else:
+        grad = gradient_column(raw_main, items, float(items["midiUnlearnButton"]["x"]) + bw0 + 22, 312, 428)
+    plate_rgb = bg.convert("RGB").getpixel((AREA_W // 2, 2))
+    if kind == "default":
+        plate_rgb = tuple(int(v * 0.78) for v in plate_rgb)            # a darker plate so the lighter panels stand out
+    mbg = bg.convert("RGB").copy()
+    from PIL import ImageDraw
+    dr = ImageDraw.Draw(mbg)
+    dr.rectangle([px, 0, px + PW - 1, AREA_H], fill=plate_rgb)
+    more_panels = [(60, 40, 1220, 280), (60, 312, 1220, 560)]            # x0, y0, x1, y1 inside the plugin area
+    for (x0, y0, x1, y1) in more_panels:
+        hh = y1 - y0
+        for yy in range(hh):
+            t = yy * (len(grad) - 1) / float(max(1, hh - 1))
+            c0, c1 = grad[int(t)], grad[min(len(grad) - 1, int(t) + 1)]
+            f = t - int(t)
+            col = tuple(int(c0[i] * (1 - f) + c1[i] * f) for i in range(3))
+            dr.line([x0, y0 + yy, x1, y0 + yy], fill=col)
+    if kind == "default":                                  # the theme's blue rule along the top of each panel
+        for (x0, y0, x1, y1) in more_panels:
+            dr.rectangle([x0, y0, x1, y0 + 2], fill=blue)
+            dr.rectangle([x0, y1 - 1, x1, y1], fill=tuple(max(0, v - 14) for v in grad[-1]))
+    WOOD = 28 if kind == "default" else 32                                               # the wooden side cheeks of the panel image
+    mbg.paste(bg.convert("RGB").crop((0, 0, WOOD, AREA_H)), (0, 0))
+    mbg.paste(bg.convert("RGB").crop((AREA_W - WOOD, 0, AREA_W, AREA_H)), (AREA_W - WOOD, 0))
+    mbg.save(os.path.join(img, "more_bg.png"))
+
+    params = {p["key"]: p for p in json.load(open(os.path.join(VST, "params.json")))["params"]}
+    L = ["# OB-Xd panel for the MPC, generated by tools/make_skin.py from the theme's coords.xml (scale %.3f)" % S,
+         "theme_bg=%s" % plate,
+         "qlinks_track = " + ",".join(QLINKS),
+         "[tab PANEL]",
+         "art file=images/panel.png"]
+    used = set()
+
+    spots = []
+    for pl in placements:
+        hw = {"knob": panel_draw.KF // 2, "toggle": BW // 2, "legato": LW // 2, "voices": VW // 2, "vam": LBW // 2, "stop": LBW // 2}[pl["kind"]]
+        spots.append((pl["key"], pl["cx"], pl["cy"], hw))
+    for pl in placements:
+        kd, key, cx, cy = pl["kind"], pl["key"], pl["cx"], pl["cy"]
+        if key not in params:
+            sys.exit("no parameter %s" % key)
+        lcy = Y_OFF + cy
+        if kd == "knob":
+            s_ = 2 * rK + 10
+            room = s_ + 10                      # a wider touch box where there is room, but not into a neighbour's picture
+            for (k2, cx2, cy2, hw2) in spots:
+                if k2 != key and abs(cy2 - cy) < s_ and cx2 != cx:
+                    room = min(room, 2 * (abs(cx2 - cx) - hw2))
+            bw_ = max(s_ + 2, room // 2 * 2)    # the box must be wider than the picture, or MPC clips its right edge
+            bh_ = s_ + 6
+            L.append('knob cx=%d cy=%d r=%d label="" key=%s strip=%s lay=side bw=%d bh=%d vs=1' % (
+                cx + (bw_ - s_) // 2, lcy, rK, key, knob_path, bw_, bh_))
+        elif kd == "toggle":
+            if "options" not in params[key]:
+                sys.exit("%s is not an on/off parameter" % key)
+            L.append('toggle cx=%d cy=%d label="" key=%s img=images/btn_off.png img_on=images/btn_on.png w=%d h=%d ns=0 bw=%d' % (
+                cx, lcy, key, BW, BH, BW - 6))
+        elif kd == "vam":
+            L.append('toggle cx=%d cy=%d label="" key=%s img=images/btn_big_off.png img_on=images/btn_big_on.png w=%d h=%d ns=0 bw=%d' % (
+                cx, lcy, key, LBW, LBH, LBW - 6))
+        elif kd == "stop":
+            L.append('button cx=%d cy=%d label="" key=stop img=images/btn_big_off.png img_on=images/btn_big_on.png w=%d h=%d' % (
+                cx, lcy, LBW, LBH))
+        elif kd == "voices":
+            L.append('slider_h cx=%d cy=%d w=%d h=%d label="" key=%s strip=images/voices8.png frames=8 ns=0 vs=1 bw=%d' % (
+                cx, lcy, VW, VH, key, VW + 4))
+        elif kd == "legato":
+            L.append('slider_h cx=%d cy=%d w=%d h=%d label="" key=%s strip=images/legato.png frames=4 ns=0 vs=1 bw=%d' % (
+                cx, lcy, LW, LH, key, LW + 4))
+        used.add(key)
+    # the BPM display (project tempo) in the top right corner
+    L.append('text cx=%d cy=%d label="BPM" size=0.9 color=ffffff' % (TEMPO_CX - TEMPO_W // 2 + 30, Y_OFF + TEMPO_CY))
+    L.append('readout cx=%d cy=%d w=%d h=%d label="" key=tempo_text box=0 tsize=27 tcolor=fc2428 talign=right tpad=8' % (
+        TEMPO_CX + 20, Y_OFF + TEMPO_CY, 108, TEMPO_H - 4))
+    used |= {"tempo_text"}
+    # BANK / PATCH selector: the engine reads the .fxb banks in the "banks" folder next to the plugin (src/obxd_banks.h). The
+    # right arrow steps to the next bank/patch, the left arrow to the previous one (both wrap around).
+    for (x0, key) in SEL_GROUPS:
+        label = key.upper()
+        top = Y_OFF + SEL_Y0
+        dx = x0 + SEL_BW + SEL_GAP                       # the display's left edge
+        L.append('text cx=%d cy=%d label="%s" size=0.7 color=ffffff' % (dx + 30, top + 9, label))
+        L.append('readout cx=%d cy=%d w=44 h=16 label="" key=%s box=0 tsize=13 tcolor=a02428 talign=right tpad=2' % (dx + SEL_DW - 26, top + 10, key))
+        L.append('readout cx=%d cy=%d w=%d h=%d label="" key=%s_name box=0 tsize=21 tcolor=fc2428 talign=left tpad=8' % (
+            dx + SEL_DW // 2, top + 31, SEL_DW - 4, 30, key))
+        L.append('button cx=%d cy=%d label="" key=%s_prev img=images/sel_left_off.png img_on=images/sel_left_on.png w=%d h=%d' % (
+            x0 + SEL_BW // 2, top + SEL_H // 2, key, SEL_BW, SEL_H))
+        L.append('button cx=%d cy=%d label="" key=%s_next img=images/sel_right_off.png img_on=images/sel_right_on.png w=%d h=%d' % (
+            dx + SEL_DW + SEL_GAP + SEL_BW // 2, top + SEL_H // 2, key, SEL_BW, SEL_H))
+        used |= {key, key + "_name", key + "_next", key + "_prev"}
+    L.append('qlinks "PANEL" = ' + ",".join(QLINKS))
+    L.append('qlinks "BANKS" = bank,patch,-,-')
+
+    # page 2: no title, no frame; the same knobs and buttons as page 1 on panels like page 1's
+    L += ["[tab MORE]", "art file=images/more_bg.png"]
+    nk = len(MORE_KNOBS)
+    for i, (key, label) in enumerate(MORE_KNOBS):
+        L.append('knob cx=%d cy=%d r=44 label="%s" key=%s strip=images/knob_96.png' % (
+            round(60 + 1160 * (i + 0.5) / nk), Y_OFF + 134, label, key))
+    nt = len(MORE_TOGGLES)
+    for i, (key, label) in enumerate(MORE_TOGGLES):
+        L.append('toggle cx=%d cy=%d label="%s" key=%s img=images/more_btn_off.png img_on=images/more_btn_on.png w=%d h=%d' % (
+            round(60 + 1160 * (i + 0.5) / nt), Y_OFF + 421, label, key, MBW, MBH))
+    L.append('qlinks "MORE" = ' + ",".join(k for k, _ in MORE_KNOBS + MORE_TOGGLES))
+
+    bank_keys = {"tempo_text", "bank", "patch", "bank_name", "patch_name", "bank_prev", "bank_next", "patch_prev", "patch_next"}
+    missing = [k for k in params if k not in used and k not in bank_keys and k not in {e[0] for e in MORE_KNOBS + MORE_TOGGLES}]
+    open(os.path.join(VST, "layout.conf"), "w").write("\n".join(L) + "\n")
+
+    cfg_path = os.path.join(VST, "vst.json")
+    cfg = json.load(open(cfg_path))
+    cfg["layout"] = "layout.conf"
+    cfg["art"] = "html"
+    cfg["skin_post"] = "skin_post.py"
+    json.dump(cfg, open(cfg_path, "w"), indent=2)
+    print("wrote vst/layout.conf (%d panel controls, scale %.3f, panel %dx%d) and vst/images/" % (len(used), S, PW, PH))
+    print("no control for: %s" % (", ".join(missing) or "nothing"))
+
+
+if __name__ == "__main__":
+    main()

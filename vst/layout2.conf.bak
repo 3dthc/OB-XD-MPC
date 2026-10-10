@@ -1,0 +1,167 @@
+# first-pass layout from studio.py auto; edit freely (or round-trip through to-svg)
+
+[tab VOLUME +15]
+frame x=10 y=92 w=152 h=304 title="VOLUME"
+knob cx=87 cy=222 r=36 label="VOLUME" key=volume
+frame x=168 y=92 w=152 h=304 title="VOICE"
+knob cx=245 cy=222 r=36 label="VOICE COUN" key=voice_count
+frame x=326 y=92 w=152 h=304 title="TUNE"
+knob cx=403 cy=222 r=36 label="TUNE" key=tune
+frame x=484 y=92 w=152 h=304 title="OCTAVE"
+knob cx=561 cy=222 r=36 label="OCTAVE" key=octave
+frame x=642 y=92 w=152 h=304 title="BENDRANGE"
+toggle cx=719 cy=222 label="BENDRANGE" key=bendrange
+frame x=800 y=92 w=152 h=304 title="BENDOSC2"
+toggle cx=877 cy=222 label="BENDOSC2" key=bendosc2
+frame x=958 y=92 w=152 h=304 title="LEGATOMODE"
+knob cx=1035 cy=222 r=36 label="LEGATOMODE" key=legatomode
+frame x=1116 y=92 w=152 h=304 title="BENDLFORATE"
+knob cx=1193 cy=222 r=36 label="BENDLFORAT" key=bendlforate
+frame x=10 y=404 w=152 h=304 title="VFLTENV"
+knob cx=87 cy=534 r=36 label="VFLTENV" key=vfltenv
+frame x=168 y=404 w=152 h=304 title="VAMPENV"
+knob cx=245 cy=534 r=36 label="VAMPENV" key=vampenv
+frame x=326 y=404 w=152 h=304 title="ASPLAYEDALLOCATION"
+toggle cx=403 cy=534 label="ASPLAYEDAL" key=asplayedallocation
+frame x=484 y=404 w=152 h=304 title="PORTAMENTO"
+knob cx=561 cy=534 r=36 label="PORTAMENTO" key=portamento
+frame x=642 y=404 w=152 h=304 title="UNISON"
+toggle cx=719 cy=534 label="UNISON" key=unison
+frame x=800 y=404 w=152 h=304 title="UDET"
+knob cx=877 cy=534 r=36 label="UDET" key=udet
+frame x=958 y=404 w=152 h=304 title="OSC2"
+knob cx=1035 cy=534 r=36 label="OSC2 DET" key=osc2_det
+frame x=1116 y=404 w=152 h=304 title="LFOFREQ"
+knob cx=1193 cy=534 r=36 label="LFOFREQ" key=lfofreq
+qlinks "VOLUME +15" = volume,voice_count,tune,octave,bendrange,bendosc2,legatomode,bendlforate,vfltenv,vampenv,asplayedallocation,portamento,unison,udet,osc2_det,lfofreq
+
+[tab LFOSINWAVE +15]
+frame x=10 y=92 w=152 h=304 title="LFOSINWAVE"
+toggle cx=87 cy=222 label="LFOSINWAVE" key=lfosinwave
+frame x=168 y=92 w=152 h=304 title="LFOSQUAREWAVE"
+toggle cx=245 cy=222 label="LFOSQUAREW" key=lfosquarewave
+frame x=326 y=92 w=152 h=304 title="LFOSHWAVE"
+toggle cx=403 cy=222 label="LFOSHWAVE" key=lfoshwave
+frame x=484 y=92 w=152 h=304 title="LFO1AMT"
+knob cx=561 cy=222 r=36 label="LFO1AMT" key=lfo1amt
+frame x=642 y=92 w=152 h=304 title="LFO2AMT"
+knob cx=719 cy=222 r=36 label="LFO2AMT" key=lfo2amt
+frame x=800 y=92 w=152 h=304 title="LFOOSC1"
+toggle cx=877 cy=222 label="LFOOSC1" key=lfoosc1
+frame x=958 y=92 w=152 h=304 title="LFOOSC2"
+toggle cx=1035 cy=222 label="LFOOSC2" key=lfoosc2
+frame x=1116 y=92 w=152 h=304 title="LFOFILTER"
+toggle cx=1193 cy=222 label="LFOFILTER" key=lfofilter
+frame x=10 y=404 w=152 h=304 title="LFOPW1"
+toggle cx=87 cy=534 label="LFOPW1" key=lfopw1
+frame x=168 y=404 w=152 h=304 title="LFOPW2"
+toggle cx=245 cy=534 label="LFOPW2" key=lfopw2
+frame x=326 y=404 w=152 h=304 title="OSC2HS"
+toggle cx=403 cy=534 label="OSC2HS" key=osc2hs
+frame x=484 y=404 w=152 h=304 title="XMOD"
+knob cx=561 cy=534 r=36 label="XMOD" key=xmod
+frame x=642 y=404 w=152 h=304 title="OSC1P"
+knob cx=719 cy=534 r=36 label="OSC1P" key=osc1p
+frame x=800 y=404 w=152 h=304 title="OSC2P"
+knob cx=877 cy=534 r=36 label="OSC2P" key=osc2p
+frame x=958 y=404 w=152 h=304 title="OSCQUANTIZE"
+toggle cx=1035 cy=534 label="OSCQUANTIZ" key=oscquantize
+frame x=1116 y=404 w=152 h=304 title="OSC1SAW"
+toggle cx=1193 cy=534 label="OSC1SAW" key=osc1saw
+qlinks "LFOSINWAVE +15" = lfosinwave,lfosquarewave,lfoshwave,lfo1amt,lfo2amt,lfoosc1,lfoosc2,lfofilter,lfopw1,lfopw2,osc2hs,xmod,osc1p,osc2p,oscquantize,osc1saw
+
+[tab OSC1PUL +12]
+frame x=10 y=92 w=152 h=304 title="OSC1PUL"
+toggle cx=87 cy=222 label="OSC1PUL" key=osc1pul
+frame x=168 y=92 w=152 h=304 title="OSC2SAW"
+toggle cx=245 cy=222 label="OSC2SAW" key=osc2saw
+frame x=326 y=92 w=152 h=304 title="OSC2PUL"
+toggle cx=403 cy=222 label="OSC2PUL" key=osc2pul
+frame x=484 y=92 w=626 h=304 title="PW"
+knob cx=561 cy=222 r=36 label="PW" key=pw
+knob cx=719 cy=222 r=36 label="PW ENV" key=pw_env
+toggle cx=877 cy=222 label="PW ENV BOT" key=pw_env_both
+knob cx=1035 cy=222 r=36 label="PW OSC2 OF" key=pw_osc2_ofs
+frame x=1116 y=92 w=152 h=304 title="BRIGHTNESS"
+knob cx=1193 cy=222 r=36 label="BRIGHTNESS" key=brightness
+frame x=10 y=404 w=152 h=304 title="ENVPITCH"
+knob cx=87 cy=534 r=36 label="ENVPITCH" key=envpitch
+frame x=168 y=404 w=152 h=304 title="OSC1MIX"
+knob cx=245 cy=534 r=36 label="OSC1MIX" key=osc1mix
+frame x=326 y=404 w=152 h=304 title="OSC2MIX"
+knob cx=403 cy=534 r=36 label="OSC2MIX" key=osc2mix
+frame x=484 y=404 w=152 h=304 title="NOISEMIX"
+knob cx=561 cy=534 r=36 label="NOISEMIX" key=noisemix
+frame x=642 y=404 w=152 h=304 title="FLT"
+knob cx=719 cy=534 r=36 label="FLT KF" key=flt_kf
+frame x=800 y=404 w=152 h=304 title="CUTOFF"
+knob cx=877 cy=534 r=36 label="CUTOFF" key=cutoff
+frame x=958 y=404 w=152 h=304 title="RESONANCE"
+knob cx=1035 cy=534 r=36 label="RESONANCE" key=resonance
+frame x=1116 y=404 w=152 h=304 title="MULTIMODE"
+knob cx=1193 cy=534 r=36 label="MULTIMODE" key=multimode
+qlinks "OSC1PUL +12" = osc1pul,osc2saw,osc2pul,pw,pw_env,pw_env_both,pw_osc2_ofs,brightness,envpitch,osc1mix,osc2mix,noisemix,flt_kf,cutoff,resonance,multimode
+
+[tab FILTER +15]
+frame x=10 y=92 w=152 h=304 title="FILTER"
+toggle cx=87 cy=222 label="FILTER WAR" key=filter_warm
+frame x=168 y=92 w=152 h=304 title="BANDPASS"
+toggle cx=245 cy=222 label="BANDPASS" key=bandpass
+frame x=326 y=92 w=152 h=304 title="FOURPOLE"
+toggle cx=403 cy=222 label="FOURPOLE" key=fourpole
+frame x=484 y=92 w=152 h=304 title="ENVELOPE"
+knob cx=561 cy=222 r=36 label="ENVELOPE A" key=envelope_amt
+frame x=642 y=92 w=152 h=304 title="LATK"
+knob cx=719 cy=222 r=36 label="LATK" key=latk
+frame x=800 y=92 w=152 h=304 title="LDEC"
+knob cx=877 cy=222 r=36 label="LDEC" key=ldec
+frame x=958 y=92 w=152 h=304 title="LSUS"
+knob cx=1035 cy=222 r=36 label="LSUS" key=lsus
+frame x=1116 y=92 w=152 h=304 title="LREL"
+knob cx=1193 cy=222 r=36 label="LREL" key=lrel
+frame x=10 y=404 w=152 h=304 title="FATK"
+knob cx=87 cy=534 r=36 label="FATK" key=fatk
+frame x=168 y=404 w=152 h=304 title="FDEC"
+knob cx=245 cy=534 r=36 label="FDEC" key=fdec
+frame x=326 y=404 w=152 h=304 title="FSUS"
+knob cx=403 cy=534 r=36 label="FSUS" key=fsus
+frame x=484 y=404 w=152 h=304 title="FREL"
+knob cx=561 cy=534 r=36 label="FREL" key=frel
+frame x=642 y=404 w=152 h=304 title="ENVDER"
+knob cx=719 cy=534 r=36 label="ENVDER" key=envder
+frame x=800 y=404 w=152 h=304 title="FILTERDER"
+knob cx=877 cy=534 r=36 label="FILTERDER" key=filterder
+frame x=958 y=404 w=152 h=304 title="PORTADER"
+knob cx=1035 cy=534 r=36 label="PORTADER" key=portader
+frame x=1116 y=404 w=152 h=304 title="PAN1"
+knob cx=1193 cy=534 r=36 label="PAN1" key=pan1
+qlinks "FILTER +15" = filter_warm,bandpass,fourpole,envelope_amt,latk,ldec,lsus,lrel,fatk,fdec,fsus,frel,envder,filterder,portader,pan1
+
+[tab PAN2 +12]
+frame x=10 y=92 w=152 h=304 title="PAN2"
+knob cx=87 cy=222 r=36 label="PAN2" key=pan2
+frame x=168 y=92 w=152 h=304 title="PAN3"
+knob cx=245 cy=222 r=36 label="PAN3" key=pan3
+frame x=326 y=92 w=152 h=304 title="PAN4"
+knob cx=403 cy=222 r=36 label="PAN4" key=pan4
+frame x=484 y=92 w=152 h=304 title="PAN5"
+knob cx=561 cy=222 r=36 label="PAN5" key=pan5
+frame x=642 y=92 w=152 h=304 title="PAN6"
+knob cx=719 cy=222 r=36 label="PAN6" key=pan6
+frame x=800 y=92 w=152 h=304 title="PAN7"
+knob cx=877 cy=222 r=36 label="PAN7" key=pan7
+frame x=958 y=92 w=152 h=304 title="PAN8"
+knob cx=1035 cy=222 r=36 label="PAN8" key=pan8
+frame x=1116 y=92 w=152 h=304 title="ECONOMY"
+toggle cx=1193 cy=222 label="ECONOMY MO" key=economy_mode
+frame x=10 y=404 w=152 h=304 title="LFO"
+toggle cx=87 cy=534 label="LFO SYNC" key=lfo_sync
+frame x=168 y=404 w=152 h=304 title="ENV"
+toggle cx=245 cy=534 label="ENV PITCH " key=env_pitch_both
+frame x=326 y=404 w=152 h=304 title="FENV"
+toggle cx=403 cy=534 label="FENV INVER" key=fenv_invert
+frame x=484 y=404 w=152 h=304 title="LEVEL"
+knob cx=561 cy=534 r=36 label="LEVEL DIF" key=level_dif
+frame x=642 y=404 w=152 h=304 title="SELF"
+toggle cx=719 cy=534 label="SELF OSC P" key=self_osc_push
+qlinks "PAN2 +12" = pan2,pan3,pan4,pan5,pan6,pan7,pan8,economy_mode,lfo_sync,env_pitch_both,fenv_invert,level_dif,self_osc_push

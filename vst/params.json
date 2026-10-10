@@ -1,0 +1,690 @@
+{
+ "name": "OB-Xd",
+ "params": [
+  {
+   "key": "bank",
+   "name": "Bank",
+   "min": 1,
+   "max": 100,
+   "default": 1,
+   "display": "int",
+   "nudge_pct": 10
+  },
+  {
+   "key": "patch",
+   "name": "Patch",
+   "min": 1,
+   "max": 128,
+   "default": 1,
+   "display": "int",
+   "nudge_pct": 10
+  },
+  {
+   "key": "bank_name",
+   "name": "Bank Name",
+   "min": 0,
+   "max": 0,
+   "default": 0,
+   "display": "string"
+  },
+  {
+   "key": "patch_name",
+   "name": "Patch Name",
+   "min": 0,
+   "max": 0,
+   "default": 0,
+   "display": "string"
+  },
+  {
+   "key": "bank_prev",
+   "name": "Bank Prev",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true
+  },
+  {
+   "key": "bank_next",
+   "name": "Bank Next",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true
+  },
+  {
+   "key": "patch_prev",
+   "name": "Patch Prev",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true
+  },
+  {
+   "key": "patch_next",
+   "name": "Patch Next",
+   "min": 0,
+   "max": 1,
+   "default": 0,
+   "momentary": true
+  },
+  {
+   "key": "volume",
+   "name": "Volume",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.5
+  },
+  {
+   "key": "voice_count",
+   "name": "Voice Count",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.2
+  },
+  {
+   "key": "tune",
+   "name": "Tune",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.5
+  },
+  {
+   "key": "octave",
+   "name": "Octave",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.5
+  },
+  {
+   "key": "bendrange",
+   "name": "Bendrange",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "bendosc2",
+   "name": "Bendosc2",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "legatomode",
+   "name": "Legatomode",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "bendlforate",
+   "name": "Bendlforate",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.6
+  },
+  {
+   "key": "vfltenv",
+   "name": "Vfltenv",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "vampenv",
+   "name": "Vampenv",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "asplayedallocation",
+   "name": "Asplayedallocation",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "portamento",
+   "name": "Portamento",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "unison",
+   "name": "Unison",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "udet",
+   "name": "Udet",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.2
+  },
+  {
+   "key": "osc2_det",
+   "name": "Osc2 Det",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.4
+  },
+  {
+   "key": "lfofreq",
+   "name": "Lfofreq",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "lfosinwave",
+   "name": "Lfosinwave",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "lfosquarewave",
+   "name": "Lfosquarewave",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "lfoshwave",
+   "name": "Lfoshwave",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "lfo1amt",
+   "name": "Lfo1Amt",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "lfo2amt",
+   "name": "Lfo2Amt",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "lfoosc1",
+   "name": "Lfoosc1",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "lfoosc2",
+   "name": "Lfoosc2",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "lfofilter",
+   "name": "Lfofilter",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "lfopw1",
+   "name": "Lfopw1",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "lfopw2",
+   "name": "Lfopw2",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "osc2hs",
+   "name": "Osc2Hs",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "xmod",
+   "name": "Xmod",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "osc1p",
+   "name": "Osc1P",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "osc2p",
+   "name": "Osc2P",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "oscquantize",
+   "name": "Oscquantize",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "osc1saw",
+   "name": "Osc1Saw",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 1
+  },
+  {
+   "key": "osc1pul",
+   "name": "Osc1Pul",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "osc2saw",
+   "name": "Osc2Saw",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 1
+  },
+  {
+   "key": "osc2pul",
+   "name": "Osc2Pul",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "pw",
+   "name": "Pw",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "brightness",
+   "name": "Brightness",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 1.0
+  },
+  {
+   "key": "envpitch",
+   "name": "Envpitch",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "osc1mix",
+   "name": "Osc1Mix",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 1.0
+  },
+  {
+   "key": "osc2mix",
+   "name": "Osc2Mix",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 1.0
+  },
+  {
+   "key": "noisemix",
+   "name": "Noisemix",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "flt_kf",
+   "name": "Flt Kf",
+   "default": 0,
+   "options": [
+    "Off",
+    "On"
+   ]
+  },
+  {
+   "key": "cutoff",
+   "name": "Cutoff",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 1.0
+  },
+  {
+   "key": "resonance",
+   "name": "Resonance",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "multimode",
+   "name": "Multimode",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "filter_warm",
+   "name": "Filter Warm",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "bandpass",
+   "name": "Bandpass",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "fourpole",
+   "name": "Fourpole",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "envelope_amt",
+   "name": "Envelope Amt",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "latk",
+   "name": "Latk",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "ldec",
+   "name": "Ldec",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "lsus",
+   "name": "Lsus",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 1.0
+  },
+  {
+   "key": "lrel",
+   "name": "Lrel",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "fatk",
+   "name": "Fatk",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "fdec",
+   "name": "Fdec",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "fsus",
+   "name": "Fsus",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "frel",
+   "name": "Frel",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "envder",
+   "name": "Envder",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.3
+  },
+  {
+   "key": "filterder",
+   "name": "Filterder",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.3
+  },
+  {
+   "key": "portader",
+   "name": "Portader",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.3
+  },
+  {
+   "key": "pan1",
+   "name": "Pan1",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.5
+  },
+  {
+   "key": "pan2",
+   "name": "Pan2",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.5
+  },
+  {
+   "key": "pan3",
+   "name": "Pan3",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.5
+  },
+  {
+   "key": "pan4",
+   "name": "Pan4",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.5
+  },
+  {
+   "key": "pan5",
+   "name": "Pan5",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.5
+  },
+  {
+   "key": "pan6",
+   "name": "Pan6",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.5
+  },
+  {
+   "key": "pan7",
+   "name": "Pan7",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.5
+  },
+  {
+   "key": "pan8",
+   "name": "Pan8",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.5
+  },
+  {
+   "key": "economy_mode",
+   "name": "Economy Mode",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 1
+  },
+  {
+   "key": "lfo_sync",
+   "name": "Lfo Sync",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "pw_env",
+   "name": "Pw Env",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "pw_env_both",
+   "name": "Pw Env Both",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "env_pitch_both",
+   "name": "Env Pitch Both",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "fenv_invert",
+   "name": "Fenv Invert",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "pw_osc2_ofs",
+   "name": "Pw Osc2 Ofs",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.0
+  },
+  {
+   "key": "level_dif",
+   "name": "Level Dif",
+   "min": 0.0,
+   "max": 1.0,
+   "default": 0.3
+  },
+  {
+   "key": "self_osc_push",
+   "name": "Self Osc Push",
+   "options": [
+    "Off",
+    "On"
+   ],
+   "default": 0
+  },
+  {
+   "key": "master_hz",
+   "name": "Frequency",
+   "unit": "Hz",
+   "min": 400.0,
+   "max": 480.0,
+   "default": 440.0
+  },
+  {
+   "key": "stop",
+   "name": "Stop",
+   "min": 0,
+   "max": 1,
+   "momentary": true,
+   "default": 0
+  },
+  {
+   "key": "tempo_text",
+   "name": "Tempo",
+   "min": 0,
+   "max": 0,
+   "default": 0,
+   "display": "string"
+  }
+ ]
+}

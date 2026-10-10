@@ -1,0 +1,11 @@
+# build output
+vst/build/
+vst/dist/
+dist/
+__pycache__/
+*.pyc
+*.zip
+# banks and themes from your own OB-Xd installs are not ours to publish (only banks/ and skin-source/ here are cleared)
+*.fxp
+dist-public/
+dist-private/

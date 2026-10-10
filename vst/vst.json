@@ -1,0 +1,35 @@
+{
+  "name": "OB-Xd",
+  "vendor": "sd88me",
+  "uid": "ObXd",
+  "version": 1000,
+  "so": "obxd.so",
+  "params": "params.json",
+  "build": {
+    "root": "..",
+    "sources": [
+      "src/obxd_mpc.cpp"
+    ],
+    "cflags": [
+      "-Isrc",
+      "-O2",
+      "-ffast-math"
+    ],
+    "libs": [
+      "-lm"
+    ]
+  },
+  "layout": "layout.conf",
+  "art": "html",
+  "skin_post": "skin_post.py",
+  "programs": {
+    "param": "patch"
+  },
+  "defines": {
+    "MODULE_SUBDIR": "\"banks\"",
+    "HAS_DISPLAY_REV": 1,
+    "PARAM_TEXT_MAX": 40,
+    "HAS_LFO_BPM": 1,
+    "HAS_TRANSPORT": 1
+  }
+}
