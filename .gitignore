@@ -5,12 +5,19 @@ dist/
 __pycache__/
 *.pyc
 *.zip
+# the public release zip is the one exception: it ships in dist-public/ so MPC users can drag and drop it
+!dist-public/OB-Xd-*-mpc-armv7.zip
+# never the private one, wherever it ends up
+*PRIVATE*
 # banks and themes from your own OB-Xd installs are not ours to publish (only banks/ and skin-source/ here are cleared)
 *.fxp
-dist-public/
 dist-private/
 
 # only the cleared Moby Pixel bank may live in banks/; anything else you drop there stays local and is never committed
 banks/*
 !banks/000 - Moby Pixel Bank.fxb
 !banks/NOTICE.md
+
+# Windows download markers that sneak in when files are unzipped on Windows
+*:Zone.Identifier
+*Zone.Identifier
