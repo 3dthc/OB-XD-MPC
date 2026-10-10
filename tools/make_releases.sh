@@ -30,7 +30,7 @@ rm -rf vst/build dist-public dist-private
 echo "== public zip (Moby Pixel bank only) =="
 package dist-public banks
 Z="dist-public/OB-Xd-$VERSION-mpc-armv7.zip"
-[ "$(unzip -Z1 "$Z" | grep -ci '\.fxb$')" = "1" ] || { echo "public zip must hold exactly one bank: stopping"; exit 1; }
+[ "$(unzip -Z1 "$Z" | grep -i '\.fxb$' | sed 's#.*/##')" = "000 - Moby Pixel Bank.fxb" ] || { echo "public zip must hold only the Moby Pixel bank: stopping"; exit 1; }
 echo "OK: $Z"
 
 if [ -n "$BANKS" ]; then

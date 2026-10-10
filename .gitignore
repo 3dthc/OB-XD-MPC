@@ -9,3 +9,8 @@ __pycache__/
 *.fxp
 dist-public/
 dist-private/
+
+# only the cleared Moby Pixel bank may live in banks/; anything else you drop there stays local and is never committed
+banks/*
+!banks/000 - Moby Pixel Bank.fxb
+!banks/NOTICE.md
