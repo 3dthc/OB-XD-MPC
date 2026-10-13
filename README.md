@@ -27,9 +27,9 @@ A native ARM VST2 build of the OB-Xd synthesizer for first-generation Akai MPC /
 - **Tempo sync for arps and sequences:** OB-Xd has no arpeggiator or sequencer of its own; those patches use the LFO. Turn on **SYNC**
   (under MODULATION on the FILTER page, also on the MORE page) and the LFO follows the MPC tempo, which the **BPM** display in the top right corner shows: the LFO RATE knob then picks how many cycles per beat (1/8, 1/4, 1/3, 1/2, 1, 3/2, 2, 3 or
   4), and it restarts when you press play. Loading a patch sets LFO SYNC to what the patch stores, which for the stock banks is off.
-- **Q-Links** come in pages of four, matching the MPC's four knobs, in panel order. OSC page: OSC (oscillators; tone; mixer + volume; amp envelope)
-  and MASTER (volume, tune, octave, glide; spread, filter and amp velocity, bend range). FILTER page: FILTER (filter; filter envelope; LFO; slop)
-  and VOICES (pan 1-4, pan 5-8). MORE page: its own controls, then THEME.
+- **Q-Links** come in pages of four, matching the MPC's four knobs, one set per screen. OSC page: oscillators; mixer + volume; amp envelope;
+  detune, brightness, tune, octave. FILTER page: filter; filter envelope; LFO; slop. MORE page: its own controls, then THEME. Every other
+  control is still there to touch.
 
 Engine: OB-Xd **2.10** source (the DSP of the community GPL fork). discoDSP's later releases (2.11 to 2.20) are binary-only, so
 their changes are not in here.

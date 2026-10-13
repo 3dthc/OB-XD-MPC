@@ -74,7 +74,12 @@ def xf_to_xd(a):
     resid = t - (o - 1) * 12.0
     v[P["OCTAVE"]] = o / 4.0
     voices = min(32, max(1, int(g("Polyphony", 0.25) * 32) + 1))
-    v[P["VOICE_COUNT"]] = (voices - 1) / 31.0
+    # The plugin's VOICES switch has 8 steps, which play 1, 5, 10, ... 32 engine voices. Stacked unison patches (every key plays
+    # all voices) at the top steps used up the MPC's CPU, so converted patches stop at step 2 (10 voices), or step 1 (5 voices)
+    # with unison on.
+    step = round((voices - 1) / 31.0 * 7)
+    step = min(step, 1 if g("Unison") > 0.5 else 2)
+    v[P["VOICE_COUNT"]] = (step + 0.5) / 8.0
     v[P["FILTER_WARM"]] = g("HQMode")
     up = g("PitchBendUp", 2 / 48.0) * 48.0
     v[P["BENDRANGE"]] = 1.0 if up >= 7 else 0.0
@@ -189,6 +194,12 @@ def write_bank(path, programs):
     open(path, "wb").write(body)
 
 
+LEVELS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cc0_levels.json")
+LEVELS = {}
+if os.path.exists(LEVELS_FILE) and "--no-levels" not in sys.argv:
+    import json
+    LEVELS = json.load(open(LEVELS_FILE))
+
 GROUPS = [("010 - CC0 Keys.fxb", ("Keys", "Plucks", "Mallets", "Bells", "Guitars", "Organs")),
           ("011 - CC0 Bass+Lead.fxb", ("Basses", "Leads")),
           ("012 - CC0 Pads+FX.fxb", ("Pads", "Strings", "Brass", "Winds", "Soundscapes", "FX", "Percussion", "Drums"))]
@@ -235,10 +246,14 @@ def main():
     credits = ["# CC0 patches: who made them\n",
                "These patches come from the factory patch set of [OB-Xf](https://github.com/surge-synthesizer/OB-Xf) (Surge Synth Team), where every one is marked "
                "`CC0 / Public Domain` in its own file. They were converted to OB-Xd's bank format by `tools/convert_obxf_patches.py` "
-               "(the inverse of OB-Xf's own OB-Xd importer). CC0 asks for no credit; it is given here anyway.\n"]
+               "(the inverse of OB-Xf's own OB-Xd importer), with two changes for the MPC: the voice count stops at 10 (5 with unison) so the CPU keeps up, and each "
+               "patch's Volume is set so they play at a similar level without clipping (`tools/make_cc0_levels.py`). CC0 asks for no credit; it is given here anyway.\n"]
     for fname, cats in GROUPS:
         sel = sorted((p for p in ok if p[0] in cats), key=lambda p: (cats.index(p[0]), p[1].lower()))
         sel = sel[:128]
+        lv = LEVELS.get(fname)
+        if lv and len(lv) == len(sel):                       # loudness evened out by tools/make_cc0_levels.py
+            sel = [(c, n, au, v[:P["VOLUME"]] + [lv[i]] + v[P["VOLUME"] + 1:]) for i, (c, n, au, v) in enumerate(sel)]
         write_bank(os.path.join(out, fname), [(n, v) for _, n, _, v in sel])
         credits.append("\n## %s (%d patches)\n\n| Patch | Author | Category |\n|---|---|---|\n" % (fname[:-4].split(" - ", 1)[1], len(sel)))
         credits.append("".join("| %s | %s | %s |\n" % (n.replace("|", "/"), au, c) for c, n, au, _ in sel))

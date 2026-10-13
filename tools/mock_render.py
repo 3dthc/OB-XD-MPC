@@ -70,13 +70,13 @@ for name, src in zip(tabs[0::2], tabs[1::2]):
         elif t == "readout" and f:
             k = kv(l, "key")
             if k in ("bank_name", "patch_name"):
-                dr.text((cx - int(kv(l, "w")) // 2 + 6, cy - 13), "Mellow Poly", font=f, fill=col)
+                dr.text((cx - int(kv(l, "w")) // 2 + 6, cy - 13), "CC0 Keys" if k == "bank_name" else "E. Piano 2", font=f, fill=col)
             if k == "bank":
-                dr.text((cx - 4, cy - 10), "6", font=f3, fill=col)
+                dr.text((cx - 4, cy - 10), "2", font=f3, fill=col)
             if k == "tempo_text":
                 dr.text((cx - 38, cy - 17), "120.0", font=f4, fill=col)
             if k == "patch":
-                dr.text((cx - 12, cy - 10), "17", font=f3, fill=col)
+                dr.text((cx - 12, cy - 10), "4", font=f3, fill=col)
     out = sys.argv[1]
     base, ext = os.path.splitext(out)
     bg.convert("RGB").save("%s-%s%s" % (base, name.lower(), ext or ".png"))

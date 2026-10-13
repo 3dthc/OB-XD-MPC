@@ -626,18 +626,15 @@ def main():
 
     TAB_NAMES = {"osc": "OSC", "filter": "FILTER"}
     # Q-Links: one line = pages of 4 (the MPC's four knobs), in the order of the panel, left to right and top to bottom
-    PAGE_QLINKS = {
+    PAGE_QLINKS = {                      # one set per screen: a second set would show the same panel again
         "osc": [("OSC", ["osc1p", "pw", "osc2p", "xmod",                       # oscillators
-                         "brightness", "osc2_det", "envpitch", "bendlforate",  # tone
-                         "osc1mix", "osc2mix", "noisemix", "volume",           # mixer
-                         "latk", "ldec", "lsus", "lrel"]),                     # amp envelope
-                ("MASTER", ["volume", "tune", "octave", "portamento",
-                            "udet", "vfltenv", "vampenv", "bendrange"])],
+                         "osc1mix", "osc2mix", "noisemix", "volume",           # mixer + volume
+                         "latk", "ldec", "lsus", "lrel",                       # amp envelope
+                         "osc2_det", "brightness", "tune", "octave"])],        # tone, tuning
         "filter": [("FILTER", ["cutoff", "resonance", "envelope_amt", "multimode",
                                "fatk", "fdec", "fsus", "frel",                  # filter envelope
                                "lfofreq", "lfo1amt", "lfo2amt", "-",            # modulation
-                               "filterder", "portader", "envder", "-"]),        # slop
-                   ("VOICES", ["pan1", "pan2", "pan3", "pan4", "pan5", "pan6", "pan7", "pan8"])],
+                               "filterder", "portader", "envder", "-"])],       # slop
     }
     for page in panel_draw.PAGES:
         placements = placements_by_page[page]

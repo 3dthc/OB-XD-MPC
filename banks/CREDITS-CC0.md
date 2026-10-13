@@ -1,5 +1,5 @@
 # CC0 patches: who made them
-These patches come from the factory patch set of [OB-Xf](https://github.com/surge-synthesizer/OB-Xf) (Surge Synth Team), where every one is marked `CC0 / Public Domain` in its own file. They were converted to OB-Xd's bank format by `tools/convert_obxf_patches.py` (the inverse of OB-Xf's own OB-Xd importer). CC0 asks for no credit; it is given here anyway.
+These patches come from the factory patch set of [OB-Xf](https://github.com/surge-synthesizer/OB-Xf) (Surge Synth Team), where every one is marked `CC0 / Public Domain` in its own file. They were converted to OB-Xd's bank format by `tools/convert_obxf_patches.py` (the inverse of OB-Xf's own OB-Xd importer), with two changes for the MPC: the voice count stops at 10 (5 with unison) so the CPU keeps up, and each patch's Volume is set so they play at a similar level without clipping (`tools/make_cc0_levels.py`). CC0 asks for no credit; it is given here anyway.
 
 ## CC0 Keys (27 patches)
 
