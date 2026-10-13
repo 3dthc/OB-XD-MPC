@@ -11,7 +11,8 @@ This project is an **unofficial** port. It is not made, endorsed or supported by
 | `Decimator17` (`src/obxd/Decimator.h`) | T. Rochebois, via musicdsp.org | as published on musicdsp.org |
 | `Tuning.h` (MTS-ESP hook) | Natalia Escalera / discoDSP, 2021 | part of the GPL v3 repositories above |
 | **Skin artwork** (`skin-source/Default Skin/`, derived `vst/images/`): the default OB-Xd community theme (its knobs, buttons, displays and logo; the panel background, section frames and labels are redrawn for the MPC screen by `tools/panel_draw.py`, in the same style, and stay under the same licence) | gitterdude, inspired by Ilkka Rosma's theme; title image by Nick Culbertson | CC BY-SA 3.0 (see `skin-source/NOTICE.md`) |
-| **Preset bank** (`banks/000 - Moby Pixel Bank.fxb`, shipped unmodified and read by the plugin at run time) | from the OB-Xd Community GPL repository (patch author not named there) | GPL v3 (that repository) |
+| **Preset bank** (`banks/000 - Moby Pixel.fxb`, file contents unmodified, only the file name shortened; read by the plugin at run time) | from the OB-Xd Community GPL repository (patch author not named there) | GPL v3 (that repository) |
+| **Preset banks** (`banks/010 - CC0 Keys.fxb`, `011 - CC0 Bass+Lead.fxb`, `012 - CC0 Pads+FX.fxb`; 79 patches) | factory patches of [OB-Xf](https://github.com/surge-synthesizer/OB-Xf) by its contributors (names in `banks/CREDITS-CC0.md`), converted to OB-Xd's bank format by `tools/convert_obxf_patches.py` | CC0 / Public Domain (stated in each patch file) |
 | MPC VST2 wrapper, `mpc_engine_t` interface, build/test/skin tools (**not included**; cloned separately) | [sd88me/mpc-vst-plugins](https://github.com/sd88me/mpc-vst-plugins) | MIT |
 | `src/obxd_mpc.cpp`, `src/obxd_dispatch.h`, `src/PluginProcessor.h`, `src/juce_audio_basics/`, `src/MTS/libMTSClient.h`, `tools/`, `vst/` (code) | this repository | GPL v3 |
 
@@ -27,3 +28,7 @@ read them from **your own** OB-Xd installation for private use; do not upload wh
 
 The engine is OB-Xd **2.10** because that is the last source published. Later releases (2.11 to 2.20 and newer) are binary-only, so this
 plugin does not include their DSP changes.
+
+## Themes
+
+The four colour themes (panel plates, display wells, recoloured logo) are drawn by `tools/panel_draw.py` and are part of this repo (GPL-3.0 code, CC BY-SA 3.0 skin files, based on gitterdude's Default Skin).

@@ -23,6 +23,7 @@ struct Inst {
     std::vector<obxdbank::BankFile> banks;
     std::vector<obxdbank::Patch> patches;    // the current bank's patches (unnamed "Default" ones left out)
     int bank = 0, patch = 0;
+    int theme = 0;                           // the panel's colour theme (the THEME option on the MORE page); the skin swaps pictures, the engine just remembers it
     double bpm = 0;                          // host tempo ("lfo_bpm"; 0 = not told yet, 120 is used)
     double secs = 0;                         // seconds since the transport last started (free-running when stopped)
     int rev = 1;                             // bumped when a bank or patch loads, so the wrapper redraws every control
@@ -48,6 +49,12 @@ void apply(Inst *s, int id, float f) {
 int find_key(const char *key) {
     for (int i = 0; i < kObxdParamCount; i++) if (!strcmp(kObxdParams[i].key, key)) return i;
     return -1;
+}
+
+// A name for the display: at most 14 characters so it stays inside its box; a longer one ends in ".."
+static int fit_name(char *buf, int n, const std::string &name) {
+    if (name.size() <= 14) return snprintf(buf, n, "%s", name.c_str());
+    return snprintf(buf, n, "%.12s..", name.c_str());
 }
 
 std::string tidy_name(std::string n) {
@@ -104,7 +111,15 @@ void *create(const char *data_dir) {
     for (int i = 0; i < kObxdParamCount; i++) {
         apply(s, kObxdParams[i].id, kObxdParams[i].def);
     }
-    s->banks = obxdbank::scan_dir(data_dir);
+    s->banks = obxdbank::scan_dir(data_dir);                    // <plugin folder>/banks: shipped with the plugin, replaced on every install
+    {
+        std::string dd = data_dir ? data_dir : "";               // <plugin folder>/my-banks: yours, kept across upgrades
+        size_t k = dd.rfind('/');
+        if (k != std::string::npos) {
+            std::vector<obxdbank::BankFile> mine = obxdbank::scan_dir((dd.substr(0, k) + "/my-banks").c_str());
+            s->banks.insert(s->banks.end(), mine.begin(), mine.end());
+        }
+    }
     if (!s->banks.empty()) { select_bank(s, 0); load_patch(s, 0); }
     return s;
 }
@@ -149,6 +164,11 @@ void set_param(void *p, const char *key, const char *val) {
         }
         return;
     }
+    if (!strcmp(key, "theme")) {
+        int t = atoi(val);
+        s->theme = t < 0 ? 0 : (t > 3 ? 3 : t);
+        return;
+    }
     if (!strcmp(key, "lfo_bpm")) {
         double b = atof(val);
         if (fabs(b - s->bpm) > 0.05) s->rev++;                            // the TEMPO display follows the project tempo
@@ -176,6 +196,7 @@ int get_param(void *p, const char *key, char *buf, int n) {
     Inst *s = (Inst *)p;
     if (!strcmp(key, "master_hz")) return snprintf(buf, n, "%.1f", s->hz);
     if (!strcmp(key, "stop")) return snprintf(buf, n, "0");
+    if (!strcmp(key, "theme")) return snprintf(buf, n, "%d", s->theme);
     if (!strcmp(key, "tempo_text")) {
         if (s->bpm > 1.0) return snprintf(buf, n, "%.1f", s->bpm);
         return snprintf(buf, n, "---");
@@ -186,11 +207,11 @@ int get_param(void *p, const char *key, char *buf, int n) {
     if (!strncmp(key, "bank_", 5) || !strncmp(key, "patch_", 6)) {
         if (!strcmp(key, "bank_name")) {
             if (s->banks.empty()) return snprintf(buf, n, "no banks folder");
-            return snprintf(buf, n, "%.22s", s->banks[s->bank].label.c_str());
+            return fit_name(buf, n, s->banks[s->bank].label);
         }
         if (!strcmp(key, "patch_name")) {
             if (s->patches.empty()) return snprintf(buf, n, "-");
-            return snprintf(buf, n, "%.22s", s->patches[s->patch].name.c_str());
+            return fit_name(buf, n, s->patches[s->patch].name);
         }
         return snprintf(buf, n, "0");                       // the arrows
     }
