@@ -696,6 +696,412 @@
         "Retro"
       ],
       "default": 0
+    },
+    {
+      "key": "bk_scroll",
+      "name": "Bank Scroll",
+      "min": 1,
+      "max": 32,
+      "default": 1,
+      "display": "int",
+      "nudge_pct": 10,
+      "qlink_ticks": 3
+    },
+    {
+      "key": "pt_scroll",
+      "name": "Patch Scroll",
+      "min": 1,
+      "max": 128,
+      "default": 1,
+      "display": "int",
+      "nudge_pct": 10,
+      "qlink_ticks": 3
+    },
+    {
+      "key": "bk_1",
+      "name": "Bank 1",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "bk_2",
+      "name": "Bank 2",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "bk_3",
+      "name": "Bank 3",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "bk_4",
+      "name": "Bank 4",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "bk_5",
+      "name": "Bank 5",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "bk_6",
+      "name": "Bank 6",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "bk_7",
+      "name": "Bank 7",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "bk_8",
+      "name": "Bank 8",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_1",
+      "name": "Patch 1",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_2",
+      "name": "Patch 2",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_3",
+      "name": "Patch 3",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_4",
+      "name": "Patch 4",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_5",
+      "name": "Patch 5",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_6",
+      "name": "Patch 6",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_7",
+      "name": "Patch 7",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_8",
+      "name": "Patch 8",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_9",
+      "name": "Patch 9",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_10",
+      "name": "Patch 10",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_11",
+      "name": "Patch 11",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_12",
+      "name": "Patch 12",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_13",
+      "name": "Patch 13",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_14",
+      "name": "Patch 14",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_15",
+      "name": "Patch 15",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_16",
+      "name": "Patch 16",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_17",
+      "name": "Patch 17",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_18",
+      "name": "Patch 18",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_19",
+      "name": "Patch 19",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_20",
+      "name": "Patch 20",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_21",
+      "name": "Patch 21",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_22",
+      "name": "Patch 22",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_23",
+      "name": "Patch 23",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_24",
+      "name": "Patch 24",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "display": "string",
+      "momentary": true
+    },
+    {
+      "key": "pt_pg_prev",
+      "name": "Page Prev",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "momentary": true
+    },
+    {
+      "key": "pt_pg_next",
+      "name": "Page Next",
+      "min": 0,
+      "max": 1,
+      "default": 0,
+      "momentary": true
+    },
+    {
+      "key": "pt_page",
+      "name": "Patch Page",
+      "min": 0,
+      "max": 0,
+      "default": 0,
+      "display": "string"
+    },
+    {
+      "key": "load_mode",
+      "name": "Load",
+      "options": [
+        "PATCHES",
+        "BANK (.FXB)",
+        "PRESET (.FXP)"
+      ],
+      "default": 0
+    },
+    {
+      "key": "br_bank_title",
+      "name": "Bank Title",
+      "min": 0,
+      "max": 0,
+      "default": 0,
+      "display": "string"
+    },
+    {
+      "key": "br_patch_title",
+      "name": "Patch Title",
+      "min": 0,
+      "max": 0,
+      "default": 0,
+      "display": "string"
+    },
+    {
+      "key": "br_bank_cap",
+      "name": "Bank Caption",
+      "min": 0,
+      "max": 0,
+      "default": 0,
+      "display": "string"
+    },
+    {
+      "key": "br_patch_cap",
+      "name": "Patch Caption",
+      "min": 0,
+      "max": 0,
+      "default": 0,
+      "display": "string"
+    },
+    {
+      "key": "br_bank",
+      "name": "Browse Bank",
+      "min": 0,
+      "max": 0,
+      "default": 0,
+      "display": "string"
+    },
+    {
+      "key": "br_patch",
+      "name": "Browse Patch",
+      "min": 0,
+      "max": 0,
+      "default": 0,
+      "display": "string"
+    },
+    {
+      "key": "ui_cap_theme",
+      "name": "Theme Caption",
+      "min": 0,
+      "max": 0,
+      "default": 0,
+      "display": "string"
+    },
+    {
+      "key": "ui_cap_page",
+      "name": "Page Caption",
+      "min": 0,
+      "max": 0,
+      "default": 0,
+      "display": "string"
     }
   ]
 }

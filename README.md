@@ -8,28 +8,38 @@ A native ARM VST2 build of the OB-Xd synthesizer for first-generation Akai MPC /
 ![The four themes: Slate, MPC Grey, MPC Black, Retro (OSC page)](docs/screenshots/obxd-themes.png)
 ![OSC page (render with sample names)](docs/screenshots/obxd.png)
 ![FILTER page](docs/screenshots/obxd-filter.png)
-![MORE page](docs/screenshots/obxd-more.png)
+![BROWSE page](docs/screenshots/obxd-browse.png)
+![SETTINGS page](docs/screenshots/obxd-settings.png)
 
 ## What you get
 
 - All 77 OB-Xd parameters, 8 voices, on a full-screen touch panel in the community theme's style, split over three pages with big
   knobs and buttons for fingers (tabs at the top): **OSC** (master, global, oscillators, mixer, control, amp envelope), **FILTER**
-  (filter, filter envelope, modulation, voice variation) and **MORE** for the controls the panel has no place for.
+  (filter, filter envelope, modulation, voice variation) and **SETTINGS** for the controls the panel has no place for.
   BANK, PATCH and BPM are on the OSC and FILTER pages.
-- **THEME** (bottom of the MORE page, also the last MORE Q-Link): four looks, switched live. **Slate** (default), **MPC Grey** (classic MPC grey with
+- **THEME** (a drop-down in the top left of the SETTINGS page, touch only): four looks, switched live. **Slate** (default), **MPC Grey** (classic MPC grey with
   green LCD displays), **MPC Black** (MPC1000-style black with amber displays) and **Retro** (cream with orange LED displays). The BANK / PATCH / BPM
   displays, legato and voices readouts change colour with it.  Saved as a normal parameter at the end of the list,
   so older projects load unchanged.
-- **FREQUENCY (Hz):** reference pitch, 400 to 480 Hz (default 440), on the MORE page. It sits on top of TUNE and is not stored in presets.
+- **FREQUENCY (Hz):** reference pitch, 400 to 480 Hz (default 440), on the SETTINGS page. It sits on top of TUNE and is not stored in presets.
 - **STOP:** a panic button (all notes and sound off) next to VAM. LEARN, CLEAR and MENU are removed (no MIDI learn on the MPC).
 - **BANK / PATCH selector** at the top centre of the OSC and FILTER pages, each with a left and a right arrow (right = next, left = previous, they wrap around). Banks are plain OB-Xd `.fxb` files in the `banks` folder next to the plugin; the release ships the Moby Pixel bank and three banks of CC0 (public domain) patches. Your own banks go in a `my-banks` folder next to `banks`; `banks` itself is replaced on every install, so it only ever holds what the release ships.
   Names longer than 16 characters end in `..` so they stay inside the display. The MPC PRESET menu lists the patches of the current bank.
 - **Tempo sync for arps and sequences:** OB-Xd has no arpeggiator or sequencer of its own; those patches use the LFO. Turn on **SYNC**
-  (under MODULATION on the FILTER page, also on the MORE page) and the LFO follows the MPC tempo, which the **BPM** display in the top right corner shows: the LFO RATE knob then picks how many cycles per beat (1/8, 1/4, 1/3, 1/2, 1, 3/2, 2, 3 or
+  (under MODULATION on the FILTER page, also on the SETTINGS page) and the LFO follows the MPC tempo, which the **BPM** display in the top right corner shows: the LFO RATE knob then picks how many cycles per beat (1/8, 1/4, 1/3, 1/2, 1, 3/2, 2, 3 or
   4), and it restarts when you press play. Loading a patch sets LFO SYNC to what the patch stores, which for the stock banks is off.
-- **Q-Links** come in pages of four, matching the MPC's four knobs, one set per screen. OSC page: oscillators; mixer + volume; amp envelope;
-  detune, brightness, tune, octave. FILTER page: filter; filter envelope; LFO; slop. MORE page: its own controls, then THEME. Every other
-  control is still there to touch.
+- **BROWSE page:** every bank in a list on the left, the patches of the bank you are looking at in a grid on the right (24 to a page, with page
+  arrows). Tap a bank to look at it (nothing changes in the sound), tap a patch to play it. The two displays on top show what is playing.
+  The first Q-Link scrolls the banks (looking only, it never loads a patch). The second scrolls the patches of the bank you are looking at and plays each one; it stops at the first and last patch and never
+  moves into another bank (pick the bank with the first knob or by tapping it).
+- **Loader (on the BROWSE page):** the drop-down at the bottom left switches the two lists into a file browser. **BANK (.FXB)** shows places
+  (plugin folder, internal, USB / SD, all files) on the left and folders plus `.fxb` bank files on the right; **PRESET (.FXP)** does the same
+  for single `.fxp` programs. Tap a folder to open it (`^ UP` goes back), tap a file to add it: it is copied into `my-banks` (programs into
+  `my-banks/presets`, which appear together as the bank **My Presets**), so it stays installed across restarts and updates and never has to
+  be loaded from a folder again. A bank shows up in the bank list, a preset plays straight away. Choose PATCHES to go back.
+- **Q-Links** only where they are practical on the knobs, one page per tab (no sub-pages), one panel section per column of four knobs. OSC:
+  MASTER, OSCILLATORS, MIXER, AMPLIFIER ENVELOPE. FILTER: FILTER, FILTER ENVELOPE, MODULATION. BROWSE: banks and patches. SETTINGS: its knobs,
+  then its buttons. The column you are on is outlined on the screen. Everything else is on the touchscreen.
 
 Engine: OB-Xd **2.10** source (the DSP of the community GPL fork). discoDSP's later releases (2.11 to 2.20) are binary-only, so
 their changes are not in here.

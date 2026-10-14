@@ -6,6 +6,8 @@
 #include <math.h>
 #include <cmath>
 #include <string.h>
+#include <dirent.h>
+#include <sys/stat.h>
 extern "C" {
 #include "engine.h"
 }
@@ -27,7 +29,21 @@ struct Inst {
     double bpm = 0;                          // host tempo ("lfo_bpm"; 0 = not told yet, 120 is used)
     double secs = 0;                         // seconds since the transport last started (free-running when stopped)
     int rev = 1;                             // bumped when a bank or patch loads, so the wrapper redraws every control
+    // The BROWSE page: a bank list and a patch grid. It looks at one bank (bb) and one page of its patches (ppage) without
+    // loading anything; only a patch tap or the patch knob changes the sound.
+    std::vector<std::vector<std::string> > names;   // every bank's patch names (what select_bank() would list), read once at start
+    std::vector<int> cum;                           // patches before bank b, over all banks
+    int bb = 0, ppage = 0;
+    // The loader (LOAD BANK / LOAD PRESET on the BROWSE page): the same two lists show places and files instead of banks and patches
+    struct FEnt { std::string name; bool dir; };
+    std::string data_dir;                            // <plugin folder>/banks
+    int fmode = 0;                                   // 0 patches, 1 pick a bank file (.fxb), 2 pick a program file (.fxp)
+    std::string cwd, note;                           // the folder being looked at; the last result ("ADDED: ...")
+    std::vector<FEnt> ents;
+    int fpage = 0;
+    std::vector<std::pair<std::string, std::string> > roots;   // label, path
 };
+static const int BK_TILES = 8, PT_TILES = 24;       // tiles on the BROWSE page: bank rows, patch grid cells
 
 // The panel shows voice count (8 digits) and legato mode (4 labels) as pictures: snap the engine to the same
 // step the picture shows, so what is displayed is what plays.
@@ -55,6 +71,12 @@ int find_key(const char *key) {
 static int fit_name(char *buf, int n, const std::string &name) {
     if (name.size() <= 14) return snprintf(buf, n, "%s", name.c_str());
     return snprintf(buf, n, "%.12s..", name.c_str());
+}
+
+// The same for a BROWSE tile, which is wider: up to 18 characters, so it stays inside the tile
+static int fit_tile(char *buf, int n, const std::string &name) {
+    if (name.size() <= 18) return snprintf(buf, n, "%s", name.c_str());
+    return snprintf(buf, n, "%.16s..", name.c_str());
 }
 
 std::string tidy_name(std::string n) {
@@ -101,8 +123,195 @@ void load_patch(Inst *s, int idx) {
         apply(s, id, v);
     }
     s->synth.allNotesOff();
+    s->bb = s->bank;                                       // the BROWSE page follows what is playing
+    s->ppage = s->patch / PT_TILES;
     s->rev++;
 }
+
+// BROWSE: look at bank b (no sound change); the grid shows the playing patch's page when that is the bank being played
+void browse_bank(Inst *s, int b) {
+    int n = (int)s->banks.size();
+    if (!n) return;
+    b = b < 0 ? 0 : (b >= n ? n - 1 : b);
+    s->bb = b;
+    s->ppage = (b == s->bank && !s->patches.empty()) ? s->patch / PT_TILES : 0;
+    s->rev++;
+}
+
+int bank_patches(Inst *s, int b) { return (b >= 0 && b < (int)s->names.size()) ? (int)s->names[b].size() : 0; }
+
+// BROWSE: play patch idx of bank b. A bank change loads that bank's list first.
+void play_patch(Inst *s, int b, int idx) {
+    if (b < 0 || b >= (int)s->banks.size()) return;
+    if (b != s->bank || s->patches.empty()) select_bank(s, b);
+    load_patch(s, idx);
+}
+
+// BROWSE patch knob: one running number through every patch of every bank, so it carries on into the next bank at the end of a list
+void scroll_patch(Inst *s, int i) {                          // i = position inside the bank being looked at; never leaves it
+    int n = bank_patches(s, s->bb);
+    if (n <= 0) return;
+    i = i < 0 ? 0 : (i >= n ? n - 1 : i);
+    if (s->bb == s->bank && i == s->patch) return;
+    play_patch(s, s->bb, i);
+}
+
+// Every bank: the shipped ones, yours in my-banks, and the loose programs in my-banks/presets as "My Presets"
+std::string my_banks_dir(Inst *s) {
+    size_t k = s->data_dir.rfind('/');
+    return k == std::string::npos ? std::string() : s->data_dir.substr(0, k) + "/my-banks";
+}
+
+void scan_all(Inst *s) {
+    s->banks = obxdbank::scan_dir(s->data_dir.c_str());               // <plugin folder>/banks: shipped with the plugin, replaced on every install
+    std::string mb = my_banks_dir(s);                                  // <plugin folder>/my-banks: yours, kept across upgrades
+    if (!mb.empty()) {
+        std::vector<obxdbank::BankFile> mine = obxdbank::scan_dir(mb.c_str());
+        s->banks.insert(s->banks.end(), mine.begin(), mine.end());
+        obxdbank::BankFile pb;
+        if (obxdbank::presets_bank(mb, pb)) s->banks.push_back(pb);
+    }
+    s->names.clear();
+    for (size_t b = 0; b < s->banks.size(); b++) {                    // every bank's patch names, for the BROWSE page
+        std::vector<obxdbank::Patch> all;
+        std::vector<std::string> nm, all_nm;
+        if (obxdbank::load_bank(s->banks[b].path, PARAM_COUNT, all)) {
+            for (size_t i = 0; i < all.size(); i++) {
+                std::string t = tidy_name(all[i].name);
+                all_nm.push_back(t);
+                if (!unnamed(t)) nm.push_back(t);
+            }
+        }
+        s->names.push_back(nm.empty() ? all_nm : nm);          // the same list select_bank() makes
+    }
+    s->cum.assign(1, 0);
+    for (size_t b = 0; b < s->names.size(); b++) s->cum.push_back(s->cum.back() + (int)s->names[b].size());
+}
+
+// ---- the loader ----
+std::string parent_of(const std::string &p) {
+    if (p.size() <= 1) return "/";
+    size_t k = p.find_last_of('/');
+    if (k == std::string::npos || k == 0) return "/";
+    return p.substr(0, k);
+}
+
+void fb_roots(Inst *s) {                                                 // places to start from: those that exist on this device
+    s->roots.clear();
+    const char *cand[][2] = { {"INTERNAL", "/sdcard"}, {"USB / SD", "/media"}, {"MOUNTS", "/mnt"}, {"HOME", "/root"}, {"ALL FILES", "/"} };
+    for (int i = 0; i < 5; i++) if (obxdbank::is_dir(cand[i][1])) s->roots.push_back(std::make_pair(std::string(cand[i][0]), std::string(cand[i][1])));
+    std::string pf = parent_of(s->data_dir);                             // the plugin's own folder is a good place to look too
+    if (!s->data_dir.empty() && obxdbank::is_dir(pf)) s->roots.insert(s->roots.begin(), std::make_pair(std::string("PLUGIN"), pf));
+    if ((int)s->roots.size() > BK_TILES) s->roots.resize(BK_TILES);
+}
+
+static std::string lower_s(std::string x) { for (size_t i = 0; i < x.size(); i++) x[i] = (char)tolower((unsigned char)x[i]); return x; }
+
+void fb_list(Inst *s) {                                                  // the folders and matching files of cwd
+    s->ents.clear();
+    s->fpage = 0;
+    if (s->cwd != "/" && !s->cwd.empty()) s->ents.push_back(Inst::FEnt{"..", true});
+    std::vector<std::string> dirs, files;
+    DIR *d = opendir(s->cwd.c_str());
+    if (d) {
+        while (struct dirent *e = readdir(d)) {
+            std::string n = e->d_name;
+            if (n.empty() || n[0] == '.') continue;
+            if (obxdbank::is_dir(s->cwd + (s->cwd == "/" ? "" : "/") + n)) dirs.push_back(n);
+            else if (obxdbank::ends_with_nocase(n, s->fmode == 1 ? ".fxb" : ".fxp")) files.push_back(n);
+        }
+        closedir(d);
+    }
+    struct Ci { static bool lt(const std::string &a, const std::string &b) { return lower_s(a) < lower_s(b); } };
+    std::sort(dirs.begin(), dirs.end(), Ci::lt);
+    std::sort(files.begin(), files.end(), Ci::lt);
+    for (size_t i = 0; i < dirs.size(); i++) s->ents.push_back(Inst::FEnt{dirs[i], true});
+    for (size_t i = 0; i < files.size(); i++) s->ents.push_back(Inst::FEnt{files[i], false});
+}
+
+void fb_open(Inst *s, int mode) {
+    s->fmode = mode < 0 ? 0 : (mode > 2 ? 2 : mode);
+    s->note.clear();
+    if (s->fmode) {
+        if (s->cwd.empty() || !obxdbank::is_dir(s->cwd)) s->cwd = s->roots.empty() ? "/" : s->roots[0].second;
+        fb_list(s);
+    }
+    s->rev++;
+}
+
+static bool copy_bytes(const std::string &data, const std::string &dst) {
+    FILE *f = fopen(dst.c_str(), "wb");
+    if (!f) return false;
+    bool ok = fwrite(data.data(), 1, data.size(), f) == data.size();
+    ok = (fclose(f) == 0) && ok;
+    return ok;
+}
+
+// Copy the picked file into my-banks (banks) or my-banks/presets (programs), so it is there for good, then look at it.
+void fb_import(Inst *s, const std::string &path, const std::string &base) {
+    bool preset = s->fmode == 2;
+    std::string mb = my_banks_dir(s);
+    if (mb.empty()) { s->note = "NO MY-BANKS FOLDER"; return; }
+    std::string data;
+    if (!obxdbank::read_file(path, data)) { s->note = "CANNOT READ FILE"; return; }
+    if (preset) { obxdbank::Patch t; if (!obxdbank::load_fxp(path, PARAM_COUNT, t)) { s->note = "NOT AN OB-XD PRESET"; return; } }
+    else { std::vector<obxdbank::Patch> t; if (!obxdbank::load_bank(path, PARAM_COUNT, t)) { s->note = "NOT AN OB-XD BANK"; return; } }
+    std::string dir = preset ? mb + "/presets" : mb;
+    mkdir(mb.c_str(), 0755);
+    if (preset) mkdir(dir.c_str(), 0755);
+    std::string stem = base.substr(0, base.size() - 4), ext = base.substr(base.size() - 4), dst = dir + "/" + base;
+    for (int n = 2; ; n++) {
+        std::string old;
+        if (!obxdbank::read_file(dst, old)) break;                       // free name
+        if (old == data) { s->note = "ALREADY ADDED"; return; }
+        if (n > 99) { s->note = "TOO MANY COPIES"; return; }
+        char sfx[16];
+        snprintf(sfx, sizeof sfx, "-%d", n);
+        dst = dir + "/" + stem + sfx + ext;
+    }
+    if (!copy_bytes(data, dst)) { s->note = "CANNOT WRITE (READ-ONLY?)"; return; }
+    std::string keep = (s->banks.empty() ? std::string() : s->banks[s->bank].path);
+    scan_all(s);                                                          // the bank list now has it
+    s->bank = 0;
+    for (size_t b = 0; b < s->banks.size(); b++) if (s->banks[b].path == keep) s->bank = (int)b;
+    if (!s->banks.empty() && s->banks[s->bank].path == mb + "/presets") {   // the playing bank grew: refresh its list, same patch
+        int p = s->patch;
+        select_bank(s, s->bank);
+        s->patch = p >= (int)s->patches.size() ? 0 : p;
+    }
+    std::string label = stem.size() > 16 ? stem.substr(0, 14) + ".." : stem;
+    s->note = "ADDED: " + label;
+    for (size_t b = 0; b < s->banks.size(); b++) {
+        if (preset && s->banks[b].path == mb + "/presets") {              // a new program: play it
+            std::vector<std::string> fl = obxdbank::list_ext(mb + "/presets", ".fxp");
+            int idx = 0;
+            for (size_t i = 0; i < fl.size(); i++) if (fl[i] == dst.substr(dst.rfind('/') + 1)) idx = (int)i;
+            if (idx >= (int)s->names[b].size()) idx = 0;
+            play_patch(s, (int)b, idx);
+            s->bb = (int)b;
+            s->ppage = idx / PT_TILES;
+        } else if (!preset && s->banks[b].path == dst) {
+            s->bb = (int)b;
+            s->ppage = 0;
+        }
+    }
+    s->rev++;
+}
+
+void fb_tap(Inst *s, int k) {                                            // tile k (0-based) of the file list
+    int idx = s->fpage * PT_TILES + k;
+    if (idx < 0 || idx >= (int)s->ents.size()) return;
+    const Inst::FEnt &e = s->ents[idx];
+    s->note.clear();
+    if (e.dir) {
+        s->cwd = e.name == ".." ? parent_of(s->cwd) : s->cwd + (s->cwd == "/" ? "" : "/") + e.name;
+        fb_list(s);
+        s->rev++;
+        return;
+    }
+    fb_import(s, s->cwd + (s->cwd == "/" ? "" : "/") + e.name, e.name);
+}
+
 
 void *create(const char *data_dir) {
     Inst *s = new Inst();
@@ -111,15 +320,9 @@ void *create(const char *data_dir) {
     for (int i = 0; i < kObxdParamCount; i++) {
         apply(s, kObxdParams[i].id, kObxdParams[i].def);
     }
-    s->banks = obxdbank::scan_dir(data_dir);                    // <plugin folder>/banks: shipped with the plugin, replaced on every install
-    {
-        std::string dd = data_dir ? data_dir : "";               // <plugin folder>/my-banks: yours, kept across upgrades
-        size_t k = dd.rfind('/');
-        if (k != std::string::npos) {
-            std::vector<obxdbank::BankFile> mine = obxdbank::scan_dir((dd.substr(0, k) + "/my-banks").c_str());
-            s->banks.insert(s->banks.end(), mine.begin(), mine.end());
-        }
-    }
+    s->data_dir = data_dir ? data_dir : "";
+    scan_all(s);
+    fb_roots(s);
     if (!s->banks.empty()) { select_bank(s, 0); load_patch(s, 0); }
     return s;
 }
@@ -147,6 +350,28 @@ void set_param(void *p, const char *key, const char *val) {
     Inst *s = (Inst *)p;
     if (!strcmp(key, "stop")) {                            // STOP button: panic (all notes off, all sound off)
         if (atof(val) > 0.5) s->synth.allSoundOff();
+        return;
+    }
+    if (!strcmp(key, "load_mode")) { fb_open(s, atoi(val)); return; }                                 // the LOAD drop-down: PATCHES / LOAD BANK / LOAD PRESET
+    if (s->fmode && (!strcmp(key, "bk_scroll") || !strcmp(key, "pt_scroll"))) return;               // the knobs rest while a file list is up
+    if (!strcmp(key, "bk_scroll")) { browse_bank(s, (int)(atof(val) + 0.5) - 1); return; }        // BROWSE bank knob: look only
+    if (!strcmp(key, "pt_scroll")) { scroll_patch(s, (int)(atof(val) + 0.5) - 1); return; }      // BROWSE patch knob: plays
+    if (!strncmp(key, "bk_", 3) || !strncmp(key, "pt_", 3)) {                                      // BROWSE tiles and page arrows
+        if (atof(val) < 0.5) return;                                                               // a tap, not its release
+        int k = atoi(key + 3);
+        if (s->fmode) {                                                                            // file list: places on the left, files on the right
+            if (!strncmp(key, "bk_", 3) && k >= 1 && k <= (int)s->roots.size()) { s->cwd = s->roots[k - 1].second; s->note.clear(); fb_list(s); s->rev++; }
+            else if (!strncmp(key, "pt_", 3) && k >= 1 && k <= PT_TILES) fb_tap(s, k - 1);
+            else if (!strcmp(key, "pt_pg_prev")) { if (s->fpage > 0) { s->fpage--; s->rev++; } }
+            else if (!strcmp(key, "pt_pg_next")) { if ((s->fpage + 1) * PT_TILES < (int)s->ents.size()) { s->fpage++; s->rev++; } }
+            return;
+        }
+        if (!strncmp(key, "bk_", 3) && k >= 1 && k <= BK_TILES) browse_bank(s, (s->bb / BK_TILES) * BK_TILES + k - 1);
+        else if (!strncmp(key, "pt_", 3) && k >= 1 && k <= PT_TILES) {
+            int idx = s->ppage * PT_TILES + k - 1;
+            if (idx < bank_patches(s, s->bb)) play_patch(s, s->bb, idx);
+        } else if (!strcmp(key, "pt_pg_prev")) { if (s->ppage > 0) { s->ppage--; s->rev++; } }
+        else if (!strcmp(key, "pt_pg_next")) { if ((s->ppage + 1) * PT_TILES < bank_patches(s, s->bb)) { s->ppage++; s->rev++; } }
         return;
     }
     if (!strcmp(key, "bank") || !strcmp(key, "patch") || !strncmp(key, "bank_", 5) || !strncmp(key, "patch_", 6)) {
@@ -204,6 +429,72 @@ int get_param(void *p, const char *key, char *buf, int n) {
     if (!strcmp(key, "display_rev")) return snprintf(buf, n, "%d", s->rev);
     if (!strcmp(key, "bank")) return snprintf(buf, n, "%d", s->bank + 1);
     if (!strcmp(key, "patch")) return snprintf(buf, n, "%d", s->patch + 1);
+    if (!strcmp(key, "bk_scroll")) return snprintf(buf, n, "%d", s->bb + 1);
+    if (!strcmp(key, "pt_scroll")) return snprintf(buf, n, "%d", s->bb == s->bank ? s->patch + 1 : 1);
+    if (!strcmp(key, "load_mode")) return snprintf(buf, n, "%d", s->fmode);
+    if (!strcmp(key, "ui_cap_theme")) return snprintf(buf, n, "THEME");                              // static captions, drawn as live text so they can be sized
+    if (!strcmp(key, "ui_cap_page")) return snprintf(buf, n, "PAGE");
+    if (!strncmp(key, "br_", 3)) {                                                                 // the BROWSE page's own titles and displays
+        if (!strcmp(key, "br_bank_title")) return snprintf(buf, n, "%s", s->fmode ? "PLACES" : "BANKS");
+        if (!strcmp(key, "br_patch_title")) return snprintf(buf, n, "%s", s->fmode == 1 ? "BANK FILES (.FXB)" : s->fmode == 2 ? "PRESET FILES (.FXP)" : "PATCHES");
+        if (!strcmp(key, "br_bank_cap")) return snprintf(buf, n, "%s", s->fmode ? "TAP A FILE TO ADD IT" : "PLAYING BANK");
+        if (!strcmp(key, "br_patch_cap")) return snprintf(buf, n, "%s", s->fmode ? (s->note.empty() ? "FOLDER" : "RESULT") : "PLAYING PATCH");
+        if (!strcmp(key, "br_bank")) {
+            if (s->fmode) return snprintf(buf, n, "%s", s->fmode == 1 ? "LOAD BANK" : "LOAD PRESET");
+            return get_param(p, "bank_name", buf, n);
+        }
+        if (!strcmp(key, "br_patch")) {
+            if (!s->fmode) return get_param(p, "patch_name", buf, n);
+            if (!s->note.empty()) return snprintf(buf, n, "%s", s->note.c_str());
+            if (s->cwd.size() <= 30) return snprintf(buf, n, "%s", s->cwd.c_str());
+            return snprintf(buf, n, "..%s", s->cwd.c_str() + s->cwd.size() - 28);
+        }
+        return -1;
+    }
+    if (!strcmp(key, "pt_page")) {
+        if (s->fmode) {
+            int tot = (int)s->ents.size(), pages = tot > 0 ? (tot + PT_TILES - 1) / PT_TILES : 1;
+            return snprintf(buf, n, "%d / %d", s->fpage + 1, pages);
+        }
+        int tot = bank_patches(s, s->bb), pages = tot > 0 ? (tot + PT_TILES - 1) / PT_TILES : 1;
+        return snprintf(buf, n, "%d / %d", s->ppage + 1, pages);
+    }
+    if (!strncmp(key, "bk_", 3) || !strncmp(key, "pt_", 3)) {                                      // BROWSE tiles: text, and "_on" = lit
+        int k = atoi(key + 3);
+        bool on = strlen(key) > 3 && !strcmp(key + strlen(key) - 3, "_on");
+        if (s->fmode && !strncmp(key, "bk_", 3) && k >= 1 && k <= BK_TILES) {
+            if (k > (int)s->roots.size()) return on ? snprintf(buf, n, "0") : snprintf(buf, n, " ");
+            if (!on) return fit_tile(buf, n, s->roots[k - 1].first);
+            int best = -1; size_t bl = 0;                                                          // lit: the place cwd is under (the deepest match)
+            for (size_t r = 0; r < s->roots.size(); r++) {
+                const std::string &rp = s->roots[r].second;
+                bool under = s->cwd == rp || (s->cwd.compare(0, rp.size() + (rp == "/" ? 0 : 1), rp + (rp == "/" ? "" : "/")) == 0);
+                if (under && rp.size() >= bl) { best = (int)r; bl = rp.size(); }
+            }
+            return snprintf(buf, n, "%d", best == k - 1 ? 1 : 0);
+        }
+        if (s->fmode && !strncmp(key, "pt_", 3) && k >= 1 && k <= PT_TILES) {
+            int idx = s->fpage * PT_TILES + k - 1;
+            if (on) return snprintf(buf, n, "0");
+            if (idx >= (int)s->ents.size()) return snprintf(buf, n, " ");
+            const Inst::FEnt &e = s->ents[idx];
+            if (e.dir && e.name == "..") return snprintf(buf, n, "^ UP");
+            return fit_tile(buf, n, e.dir ? "> " + e.name : e.name);
+        }
+        if (!strncmp(key, "bk_", 3) && k >= 1 && k <= BK_TILES) {
+            int b = (s->bb / BK_TILES) * BK_TILES + k - 1;
+            if (on) return snprintf(buf, n, "%d", b == s->bb ? 1 : 0);
+            if (b < (int)s->banks.size()) return fit_tile(buf, n, s->banks[b].label);
+            return snprintf(buf, n, " ");
+        }
+        if (!strncmp(key, "pt_", 3) && k >= 1 && k <= PT_TILES) {
+            int idx = s->ppage * PT_TILES + k - 1;
+            if (on) return snprintf(buf, n, "%d", (s->bb == s->bank && idx == s->patch) ? 1 : 0);
+            if (idx < bank_patches(s, s->bb)) return fit_tile(buf, n, s->names[s->bb][idx]);
+            return snprintf(buf, n, " ");
+        }
+        return on ? -1 : snprintf(buf, n, "0");                                                    // the page arrows
+    }
     if (!strncmp(key, "bank_", 5) || !strncmp(key, "patch_", 6)) {
         if (!strcmp(key, "bank_name")) {
             if (s->banks.empty()) return snprintf(buf, n, "no banks folder");

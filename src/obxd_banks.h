@@ -13,6 +13,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <sys/stat.h>
 
 namespace obxdbank {
 
@@ -96,9 +97,76 @@ static inline void parse_program(const std::string &x, size_t pos, size_t end, i
     }
 }
 
+static inline bool is_dir(const std::string &path) {
+    struct stat st;
+    return stat(path.c_str(), &st) == 0 && S_ISDIR(st.st_mode);
+}
+
+static inline bool ends_with_nocase(const std::string &s, const char *suf);
+
+// One program file (.fxp): "FPCh" (a chunk holding the same <discoDSP .../> state as a bank's programs) or "FxCk" (plain parameters)
+static inline bool load_fxp(const std::string &path, int nparams, Patch &pr) {
+    std::string d;
+    if (!read_file(path, d) || d.size() < 60) return false;
+    const unsigned char *b = (const unsigned char *)d.data();
+    if (memcmp(b, "CcnK", 4)) return false;
+    if (!memcmp(b + 8, "FPCh", 4)) {
+        uint32_t csize = be32(b + 56);
+        if (60 + (size_t)csize > d.size() || csize < 8 || le32(b + 60) != 0x21324356u) return false;
+        size_t xe = 68 + (size_t)le32(b + 64);
+        if (xe > 60 + (size_t)csize) xe = 60 + csize;
+        std::string x = d.substr(68, xe - 68);
+        size_t z = x.find('\0');
+        if (z != std::string::npos) x.resize(z);
+        size_t lt = x.find('<'), sp = x.find(' ', lt == std::string::npos ? 0 : lt);
+        if (lt == std::string::npos || sp == std::string::npos) return false;
+        std::string y = "<program " + x.substr(sp + 1);                    // parse_program() reads from after "<program "
+        size_t e = y.find('>');
+        parse_program(y, 0, e == std::string::npos ? y.size() : e, nparams, pr);
+        if (pr.name.empty()) pr.name.assign((const char *)b + 28, strnlen((const char *)b + 28, 28));
+        return true;
+    }
+    if (!memcmp(b + 8, "FxCk", 4)) {
+        uint32_t np = be32(b + 24);
+        if (np > 4096 || 56 + (size_t)np * 4 > d.size()) return false;
+        pr.name.assign((const char *)b + 28, strnlen((const char *)b + 28, 28));
+        pr.voice_count_new = true;
+        pr.v.assign(nparams, __builtin_nanf(""));
+        for (uint32_t j = 0; j < np && (int)j < nparams; j++) {
+            uint32_t u = be32(b + 56 + 4 * j);
+            float f;
+            memcpy(&f, &u, 4);
+            pr.v[j] = f;
+        }
+        return true;
+    }
+    return false;
+}
+
+static inline std::vector<std::string> list_ext(const std::string &dir, const char *ext) {
+    std::vector<std::string> names;
+    DIR *d = opendir(dir.c_str());
+    if (!d) return names;
+    while (struct dirent *e = readdir(d)) {
+        std::string n = e->d_name;
+        if (n.size() > 4 && n[0] != '.' && ends_with_nocase(n, ext)) names.push_back(n);
+    }
+    closedir(d);
+    std::sort(names.begin(), names.end());
+    return names;
+}
+
 static inline bool load_bank(const std::string &path, int nparams, std::vector<Patch> &out) {
     std::string d;
     out.clear();
+    if (is_dir(path)) {                                        // a folder of .fxp programs is one bank ("My Presets")
+        std::vector<std::string> fl = list_ext(path, ".fxp");
+        for (size_t i = 0; i < fl.size(); i++) {
+            Patch pr;
+            if (load_fxp(path + "/" + fl[i], nparams, pr)) out.push_back(pr);
+        }
+        return !out.empty();
+    }
     if (!read_file(path, d) || d.size() < 160) return false;
     const unsigned char *b = (const unsigned char *)d.data();
     if (memcmp(b, "CcnK", 4)) return false;
@@ -181,6 +249,15 @@ static inline std::vector<BankFile> scan_dir(const char *dir) {
         out.push_back(bf);
     }
     return out;
+}
+
+// <my-banks>/presets/*.fxp as one bank, if there are any
+static inline bool presets_bank(const std::string &my_banks_dir, BankFile &bf) {
+    std::string pd = my_banks_dir + "/presets";
+    if (list_ext(pd, ".fxp").empty()) return false;
+    bf.path = pd;
+    bf.label = "My Presets";
+    return true;
 }
 
 } // namespace obxdbank

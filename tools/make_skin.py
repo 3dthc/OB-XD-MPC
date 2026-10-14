@@ -532,7 +532,7 @@ def main():
     from PIL import ImageDraw
     dr = ImageDraw.Draw(mbg)
     dr.rectangle([px, 0, px + PW - 1, AREA_H], fill=plate_rgb)
-    more_panels = [(60, 40, 1220, 280), (60, 312, 1220, 560)]            # x0, y0, x1, y1 inside the plugin area
+    more_panels = [(60, 92, 1220, 296), (60, 322, 1220, 570)]            # x0, y0, x1, y1 inside the plugin area
     for (x0, y0, x1, y1) in more_panels:
         hh = y1 - y0
         for yy in range(hh):
@@ -549,6 +549,24 @@ def main():
     mbg.paste(bg.convert("RGB").crop((0, 0, WOOD, AREA_H)), (0, 0))
     mbg.paste(bg.convert("RGB").crop((AREA_W - WOOD, 0, AREA_W, AREA_H)), (AREA_W - WOOD, 0))
     mbg.save(os.path.join(img, "more_bg.png"))
+
+    POP_BR, POP_ST = (52, 552, 318, 596), (60, 34, 320, 78)          # the LOAD and THEME drop-down fields (plugin coords)
+    def popup_field(tb_, th_, box):
+        """The drop-down's field: a solid dark LCD window with a chevron, drawn into the page picture (the popup itself draws no box)."""
+        x0, y0, x1, y1 = box
+        d_ = ImageDraw.Draw(tb_)
+        d_.rounded_rectangle([x0, y0, x1, y1], radius=6, fill=(14, 19, 28))
+        d_.line([x0 + 6, y0 + 2, x1 - 6, y0 + 2], fill=(52, 62, 80), width=1)                     # a faint lit top edge
+        disp_ = tuple(int(th_["disp"][j:j + 2], 16) for j in (0, 2, 4))
+        d_ = ImageDraw.Draw(tb_)
+        cx_, cy_ = x1 - 26, (y0 + y1) // 2
+        d_.polygon([(cx_ - 9, cy_ - 5), (cx_ + 9, cy_ - 5), (cx_, cy_ + 6)], fill=(242, 246, 251))
+        d_.rounded_rectangle([x0, y0, x1, y1], radius=6, outline=(120, 135, 160), width=1)
+    # the open list's panel: solid dark glass, stretched over the list's rectangle
+    lp = Image.new("RGB", (300, 150), (14, 19, 28))
+    ImageDraw.Draw(lp).rounded_rectangle([0, 0, 299, 149], radius=8, outline=(120, 135, 160), width=2, fill=(14, 19, 28))
+    lp.save(os.path.join(img, "popup_list.png"))
+
 
     # one MORE background per theme: the theme's plate, panels with its rule colour, and the control labels drawn in its ink
     from PIL import ImageFont as _F
@@ -582,14 +600,97 @@ def main():
             for j, ln in enumerate(txt.split("\n")):
                 panel_draw._text(d_, cx, cy + 21 * j, ln, lab_font)
         for i, (key, label) in enumerate(MORE_KNOBS):
-            put(round(60 + 1160 * (i + 0.5) / nk_), 134 + rK + 50, label, col_w(nk_))
+            put(round(60 + 1160 * (i + 0.5) / nk_), 170 + rK + 46, label, col_w(nk_))
         for i, (key, label) in enumerate(MORE_TOGGLES):
-            put(round(60 + 1160 * (i + 0.5) / nt_), 421 + BH // 2 + 20, label, col_w(nt_))
+            put(round(60 + 1160 * (i + 0.5) / nt_), 438 + BH // 2 + 20, label, col_w(nt_))
+        popup_field(tb, th, POP_ST)
         tb.save(os.path.join(img, "more_bg_%d.png" % ti))
+
+    # BROWSE page: per theme, the plate with two panels (BANKS, PATCHES) and three display wells for the playing bank, patch and page
+    BR_BANKS, BR_PATCH = (40, 86, 330, 530), (346, 86, 1240, 592)
+    BR_WELLS = [(40, 10, 360, 74), (376, 10, 960, 74), (1072, 10, 1176, 74)]        # bank, patch, page
+    title_font = panel_draw._font(panel_draw.FONT_TITLE, 18)
+    for ti, th in enumerate(panel_draw.THEMES):
+        tb = Image.new("RGBA", (AREA_W, AREA_H), (0, 0, 0, 255))
+        panel_draw._plate(tb, th["base"] or plate_rgb, th["noise"])
+        panel_draw._sheen(tb)
+        tb = tb.convert("RGB")
+        pl_rgb = tb.getpixel((AREA_W // 2, 2))
+        dark = sum(pl_rgb) < 300
+        pan = tuple(min(255, v + 16) if dark else max(0, v - 20) for v in pl_rgb)
+        d_ = ImageDraw.Draw(tb)
+        panel_draw.CUR.update(th)
+        from PIL import ImageFilter
+        def shadow(box, grow=0, alpha=150, blur=7, dy=4):
+            x0, y0, x1, y1 = box
+            sh = Image.new("L", tb.size, 0)
+            ImageDraw.Draw(sh).rectangle([x0 - grow, y0 - grow + dy, x1 + grow, y1 + grow + dy], fill=alpha)
+            sh = sh.filter(ImageFilter.GaussianBlur(blur))
+            tb.paste(Image.new("RGB", tb.size, (0, 0, 0)), (0, 0), sh)
+        for box in (BR_BANKS, BR_PATCH) + tuple(BR_WELLS):
+            shadow(box)
+        d_ = ImageDraw.Draw(tb)
+        lite = tuple(min(255, v + 34) for v in pan)
+        dim = tuple(max(0, v - 30) for v in pan)
+        for (x0, y0, x1, y1), ttl in ((BR_BANKS, "BANKS"), (BR_PATCH, "PATCHES")):
+            for yy in range(y1 - y0 + 1):                         # a soft top-to-bottom body gradient instead of a flat fill
+                t = yy / float(max(1, y1 - y0))
+                c = tuple(int(lite[i] * (1 - t) * 0.35 + pan[i] * (0.65 + 0.35 * (1 - t)) + dim[i] * t * 0.0) if False else int(pan[i] + (lite[i] - pan[i]) * (1 - t) * 0.45 - (pan[i] - dim[i]) * t * 0.55) for i in range(3))
+                d_.line([x0, y0 + yy, x1, y0 + yy], fill=c)
+            panel_draw._section(tb, d_, x0, x1, y0 + 2, " ", title_font)                       # the title itself is a live readout (it changes with the LOAD mode)
+            d_.rectangle([x0, y0, x1, y1], outline=tuple(max(0, v - 46) for v in pan), width=1)          # dark hairline round the panel
+            d_.line([x0 + 1, y0 + 1, x1 - 1, y0 + 1], fill=tuple(min(255, v + 44) for v in pan), width=1)  # lit top edge
+            panel_draw._hline(tb, x0, x1, y1 - 1, tuple(max(0, v - 14) for v in pan), h=2, peak=255, fade=1)
+        for (x0, y0, x1, y1) in BR_WELLS:
+            panel_draw._well(tb, x0, y0, x1, y1)
+        popup_field(tb, th, POP_BR)
+        tb.paste(theme_pb[ti].convert("RGB").crop((0, 0, 28, AREA_H)), (0, 0))
+        tb.paste(theme_pb[ti].convert("RGB").crop((AREA_W - 28, 0, AREA_W, AREA_H)), (AREA_W - 28, 0))
+        tb.save(os.path.join(img, "browse_bg_%d.png" % ti))
+
+    # the BROWSE tiles: the list draws them on a flat colour, so each one is a complete LCD window (dark glass, gloss, the theme's display colour)
+    def lcd_tile(th_, w, h, lit):
+        from PIL import ImageFilter
+        k = 4
+        panel_draw.CUR.update(th_)
+        tint, alpha, gloss, rim = th_["well"]
+        disp = tuple(int(th_["disp"][j:j + 2], 16) for j in (0, 2, 4))
+        if th_["key"] == "grey":                                       # the grey skin's light LCD green would make light text unreadable: dark green glass, lime rim
+            tint, disp, rim, gloss = (26, 34, 24), (176, 232, 120), (96, 110, 88), 40
+        elif th_["key"] == "retro":
+            rim = (110, 96, 80)
+        base = tuple(max(0, min(255, int(c))) for c in th_["base"]) if th_["base"] else (71, 73, 90)
+        pan_ = tuple(min(255, v + 16) if sum(base) < 300 else max(0, v - 20) for v in base)
+        cv = Image.new("RGB", (w * k, h * k), pan_)
+        # the well at 4x: tinted glass, inner shadow along the top, gloss over the upper half, light rim
+        W_, H_ = w * k, h * k
+        m = Image.new("L", (W_, H_), 0)
+        ImageDraw.Draw(m).rounded_rectangle([0, 0, W_ - 1, H_ - 1], radius=5 * k, fill=255)
+        glass = tuple(min(255, int(c * (1.0 if not lit else 1.0))) for c in tint)
+        cv.paste(Image.new("RGB", (W_, H_), glass), (0, 0), m.point(lambda v_: v_ * max(alpha, 235) // 255))
+        sh = Image.new("L", (W_, H_), 0)
+        ImageDraw.Draw(sh).rectangle([0, 0, W_, 4 * k], fill=150)
+        cv.paste(Image.new("RGB", (W_, H_), (0, 0, 0)), (0, 0), Image.composite(sh.filter(ImageFilter.GaussianBlur(2 * k)), Image.new("L", (W_, H_), 0), m))
+        gl = Image.new("L", (W_, H_), 0)
+        ImageDraw.Draw(gl).rounded_rectangle([3 * k, 5 * k, W_ - 4 * k, H_ // 2], radius=6 * k, fill=gloss)
+        cv.paste(Image.new("RGB", (W_, H_), (255, 255, 255)), (0, 0), Image.composite(gl.filter(ImageFilter.GaussianBlur(4 * k)), Image.new("L", (W_, H_), 0), m))
+        if lit:                                                        # the lit window: a wash of the display colour, a bright rim and a soft bloom
+            cv.paste(Image.new("RGB", (W_, H_), disp), (0, 0), m.point(lambda v_: v_ * 70 // 255))
+        d4 = ImageDraw.Draw(cv)
+        d4.rounded_rectangle([0, 0, W_ - 1, H_ - 1], radius=5 * k, outline=(disp if lit else tuple(rim)), width=(2 if lit else 1) * k)
+        out = cv.convert("RGBA")
+        out.putalpha(m)
+        return out.resize((w, h), Image.LANCZOS)
+    for ti_, th_ in enumerate(panel_draw.THEMES):
+        for nm_, (w_, h_) in (("bk", (266, 44)), ("pt", (284, 48))):
+            lcd_tile(th_, w_, h_, False).save(os.path.join(img, "tile_%s_off_%d.png" % (nm_, ti_)))
+            lcd_tile(th_, w_, h_, True).save(os.path.join(img, "tile_%s_on_%d.png" % (nm_, ti_)))
 
     params = {p["key"]: p for p in json.load(open(os.path.join(VST, "params.json")))["params"]}
     L = ["# OB-Xd panel for the MPC, generated by tools/make_skin.py from the theme's coords.xml (scale %.3f)" % S,
          "theme_bg=%s" % plate,
+         "theme_lcd=0e131c", "theme_ink=f2f6fb", "theme_seg_active=5fa8e0", "theme_seg_active_tx=0a1018",     # the drop-down lists: solid dark, light text, a bright selected row
+         "qlink_bounds=column",
          "qlinks_track = " + ",".join(QLINKS)]
     used = set()
 
@@ -626,15 +727,14 @@ def main():
 
     TAB_NAMES = {"osc": "OSC", "filter": "FILTER"}
     # Q-Links: one line = pages of 4 (the MPC's four knobs), in the order of the panel, left to right and top to bottom
-    PAGE_QLINKS = {                      # one set per screen: a second set would show the same panel again
-        "osc": [("OSC", ["osc1p", "pw", "osc2p", "xmod",                       # oscillators
-                         "osc1mix", "osc2mix", "noisemix", "volume",           # mixer + volume
-                         "latk", "ldec", "lsus", "lrel",                       # amp envelope
-                         "osc2_det", "brightness", "tune", "octave"])],        # tone, tuning
-        "filter": [("FILTER", ["cutoff", "resonance", "envelope_amt", "multimode",
-                               "fatk", "fdec", "fsus", "frel",                  # filter envelope
-                               "lfofreq", "lfo1amt", "lfo2amt", "-",            # modulation
-                               "filterder", "portader", "envder", "-"])],       # slop
+    PAGE_QLINKS = {                      # one page per tab (no sub-pages), one section per Q-Link column: only what is practical on the knobs
+        "osc": [("OSC", ["volume", "tune", "octave", "-",                                 # MASTER
+                         "osc1p", "pw", "osc2p", "-",                                     # OSCILLATORS (the row of three knobs: a tight outline)
+                         "osc1mix", "osc2mix", "noisemix", "-",                           # MIXER
+                         "latk", "ldec", "lsus", "lrel"])],                               # AMPLIFIER ENVELOPE
+        "filter": [("FILTER", ["cutoff", "resonance", "envelope_amt", "-",                # FILTER (top row of knobs)
+                               "fatk", "fdec", "fsus", "frel",                            # FILTER ENVELOPE
+                               "lfofreq", "lfo1amt", "lfo2amt", "-"])],                   # MODULATION
     }
     for page in panel_draw.PAGES:
         placements = placements_by_page[page]
@@ -688,8 +788,39 @@ def main():
         for qt, qk in PAGE_QLINKS[page]:
             L.append('qlinks "%s" = %s' % (qt, ",".join(qk)))
 
+    # BROWSE: bank list (left) and patch grid (right). Knob 1 scrolls banks (looking only), knob 2 scrolls through every patch, bank after bank
+    L += ["[tab BROWSE]", "art file=images/browse_bg_0.png",
+          'picture x=0 y=%d w=%d h=%d key=theme files="%s" fit=stretch' % (
+              Y_OFF, AREA_W, AREA_H, ",".join("images/browse_bg_%d.png" % i for i in range(nth)))]
+    for ti, th in enumerate(panel_draw.THEMES):
+        wh = " when=theme:%d" % ti
+        for (x0, y0, x1, y1), capkey, key, tsz, al in zip(BR_WELLS, ("br_bank_cap", "br_patch_cap", None),
+                                                        ("br_bank", "br_patch", "pt_page"), (30, 30, 24), ("left", "left", "center")):
+            if capkey:
+                L.append('readout cx=%d cy=%d w=%d h=%d label="" key=%s box=0 tsize=18 tcolor=%s talign=left tpad=8%s' % (
+                    (x0 + x1) // 2, Y_OFF + y0 + 14, x1 - x0 - 8, 24, capkey, th["cap"], wh))
+            else:
+                L.append('readout cx=%d cy=%d w=%d h=%d label="" key=ui_cap_page box=0 tsize=18 tcolor=%s talign=center tpad=0%s' % (
+                    (x0 + x1) // 2, Y_OFF + y0 + 14, x1 - x0 - 8, 24, th["cap"], wh))
+            L.append('readout cx=%d cy=%d w=%d h=%d label="" key=%s box=0 tsize=%d tcolor=%s talign=%s tpad=%d%s' % (
+                (x0 + x1) // 2, Y_OFF + y0 + 42, x1 - x0 - 8, 38, key, tsz, th["disp"], al, 8 if al == "left" else 0, wh))
+        ink_ = "%02x%02x%02x" % tuple(th["ink"])
+        for (x0, y0, x1, y1), tkey in ((BR_BANKS, "br_bank_title"), (BR_PATCH, "br_patch_title")):
+            L.append('readout cx=%d cy=%d w=%d h=%d label="" key=%s box=0 tsize=24 tcolor=%s talign=center tpad=0%s' % (
+                (x0 + x1) // 2, Y_OFF + y0 + 18, x1 - x0 - 16, 30, tkey, ink_, wh))
+    for sx, key in ((1036, "pt_pg_prev"), (1212, "pt_pg_next")):
+        L.append('button cx=%d cy=%d label="" key=%s img=images/sel_%s_off.png img_on=images/sel_%s_on.png w=%d h=%d' % (
+            sx, Y_OFF + 42, key, "left" if "prev" in key else "right", "left" if "prev" in key else "right", SEL_BW, SEL_H))
+    TILE = 'tsize=24 tweight=semibold talign=left tx=22'
+    for ti_ in range(nth):
+        tl = TILE + " tcolor=f4f7fb when=theme:%d" % ti_
+        L.append('list x=52 y=%d w=266 h=394 cols=1 rows=8 th=44 gap=6 key=bk img=images/tile_bk_off_%d.png img_on=images/tile_bk_on_%d.png %s' % (Y_OFF + 128, ti_, ti_, tl))
+        L.append('list x=358 y=%d w=870 h=440 cols=3 rows=8 th=48 gap=8 key=pt order=cols img=images/tile_pt_off_%d.png img_on=images/tile_pt_on_%d.png %s' % (Y_OFF + 128, ti_, ti_, tl))
+    L.append('popup cx=185 cy=%d w=266 h=44 label="" key=load_mode field=none img=images/popup_list.png accent=f2f6fb' % (Y_OFF + 574))      # PATCHES / LOAD BANK / LOAD PRESET: turns the two lists into a file browser
+    L.append('qlinks "BROWSE" = bk_scroll,pt_scroll,-,-')
+
     # last page: no title, no frame; the same knobs and buttons on panels like the others'
-    L += ["[tab MORE]", "art file=images/more_bg_0.png",
+    L += ["[tab SETTINGS]", "art file=images/more_bg_0.png",
           'picture x=0 y=%d w=%d h=%d key=theme files="%s" fit=stretch' % (
               Y_OFF, AREA_W, AREA_H, ",".join("images/more_bg_%d.png" % i for i in range(nth)))]
     nk = len(MORE_KNOBS)
@@ -697,16 +828,19 @@ def main():
     for i, (key, label) in enumerate(MORE_KNOBS):
         for ti, th in enumerate(panel_draw.THEMES):
             L.append('knob cx=%d cy=%d r=%d label="" key=%s strip=%s ns=0 vs=30 ink_dim=%s when=theme:%d' % (
-                round(60 + 1160 * (i + 0.5) / nk), Y_OFF + 134, rK, key, knob_path, VAL[th["key"]], ti))
+                round(60 + 1160 * (i + 0.5) / nk), Y_OFF + 170, rK, key, knob_path, VAL[th["key"]], ti))
     nt = len(MORE_TOGGLES)
     for i, (key, label) in enumerate(MORE_TOGGLES):
         L.append('toggle cx=%d cy=%d label="" key=%s img=images/btn_off.png img_on=images/btn_on.png w=%d h=%d ns=0' % (
-            round(60 + 1160 * (i + 0.5) / nt), Y_OFF + 421, key, BW, BH))
-    L.append('enum_h cx=640 cy=%d label="" key=theme sw=222 sh=54' % (Y_OFF + 592))      # the colour theme: swaps every page's pictures
-    L.append('qlinks "MORE" = ' + ",".join(k for k, _ in MORE_KNOBS + MORE_TOGGLES) + ",theme")
+            round(60 + 1160 * (i + 0.5) / nt), Y_OFF + 438, key, BW, BH))
+    for ti_, th_ in enumerate(panel_draw.THEMES):                      # the caption is live text so it can be a proper size; the plate's own ink (dark on the light skins)
+        L.append('readout cx=%d cy=%d w=200 h=26 label="" key=ui_cap_theme box=0 tsize=22 tweight=semibold tcolor=%02x%02x%02x talign=left tpad=0 when=theme:%d' % (
+            60 + 100, Y_OFF + 18, th_["ink"][0], th_["ink"][1], th_["ink"][2], ti_))
+    L.append('popup cx=190 cy=%d w=260 h=44 label="" key=theme field=none img=images/popup_list.png accent=f2f6fb' % (Y_OFF + 56))      # the colour theme (a drop-down): swaps every page's pictures
+    L.append('qlinks "SETTINGS" = ' + ",".join(k for k, _ in MORE_KNOBS))
 
     bank_keys = {"theme", "tempo_text", "bank", "patch", "bank_name", "patch_name", "bank_prev", "bank_next", "patch_prev", "patch_next"}
-    missing = [k for k in params if k not in used and k not in bank_keys and k not in {e[0] for e in MORE_KNOBS + MORE_TOGGLES}]
+    missing = [k for k in params if k not in used and k not in bank_keys and not k.startswith(("bk_", "pt_", "br_", "ui_")) and k != "load_mode" and k not in {e[0] for e in MORE_KNOBS + MORE_TOGGLES}]
     open(os.path.join(VST, "layout.conf"), "w").write("\n".join(L) + "\n")
 
     cfg_path = os.path.join(VST, "vst.json")
