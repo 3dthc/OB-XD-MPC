@@ -19,7 +19,7 @@ SKIN="vst/build/skin/sd88me - VST - OB-Xd"
 
 package() {   # $1 = output folder, $2 = folder holding the banks to ship
   "$MPC_VST/tools/release.py" --so vst/build/obxd.so --skin "$SKIN" --entry vst/build/pluginlist-entry.xml \
-    --version "$VERSION" --id obxd --repo "$OWNER/OB-XD-MPC" --license GPL-3.0-only --about "$ABOUT" \
+    --version "$VERSION" --id obxdmpc --repo "$OWNER/OB-XD-MPC" --license GPL-3.0-only --about "$ABOUT" \
     --extra "$2:banks" --user-data my-banks -o "$1"
 }
 
