@@ -1,4 +1,0 @@
-{ "id": "obxd", "name": "OB-Xd", "author": "sd88me/mpc-vst-plugins port; engine by Filatov Vadim (2DaT), discoDSP and the OB-Xd community", "repo": "OWNER/REPO",
-  "kind": "instrument", "style": "synth", "tags": ["oberheim", "analog", "polysynth", "ob-x"], "license": "GPL-3.0-only",
-  "summary": "OB-Xd Oberheim-style virtual analog polysynth (unofficial port): 8 voices, all 77 parameters, full-screen touch panel, BANK / PATCH selector reading .fxb banks from a folder, FREQUENCY (Hz) tuning and a STOP button.",
-  "screenshot": "https://raw.githubusercontent.com/OWNER/REPO/TAG/docs/screenshots/obxd.png" }
