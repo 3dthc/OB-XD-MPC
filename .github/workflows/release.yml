@@ -1,0 +1,36 @@
+# Builds OB-Xd for MPC in GitHub Actions and attaches OB-Xd-<version>-mpc-armv7.zip to a DRAFT release. The zip ships only
+# the cleared banks committed in banks/ (Moby Pixel and the three CC0 banks; .gitignore keeps anything else out of the repo).
+# Actions -> Release -> Run workflow, enter the version. Install that zip on an MPC, check it, then publish the draft.
+# mpc-vst-plugins is pinned to one commit in both places below.
+# No host_test: the toolchain's generic bank-stepping checks expect a full range of banks, and this engine clamps the bank
+# to the ones it finds (4 in a release), so they fail by design (they did before the 2026-10-21 toolchain too).
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Version, e.g. 0.4.4
+        required: true
+        type: string
+      dry_run:
+        description: Build and package only (zip and page previews as run artifacts), no draft release
+        type: boolean
+        default: false
+
+jobs:
+  vst:
+    uses: sd88me/mpc-vst-plugins/.github/workflows/vst-release.yml@8aa8d3552a55a93eb4034bb9bbb02cbe91d69b61
+    permissions: { contents: write }
+    with:
+      tag: ob-xd-mpc-${{ inputs.version }}
+      version: ${{ inputs.version }}
+      tools_ref: 8aa8d3552a55a93eb4034bb9bbb02cbe91d69b61
+      vst_dir: vst
+      build: '"$MPC_VST/tools/build_port.sh" vst/vst.json'
+      extra: banks:banks
+      user_data: my-banks
+      about: OB-Xd virtual analog polysynth (unofficial port).
+      plugin_id: obxdmpc
+      license: GPL-3.0-only
+      dry_run: ${{ inputs.dry_run }}
