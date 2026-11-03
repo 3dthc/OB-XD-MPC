@@ -8,6 +8,8 @@
 #include <string.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <time.h>
+#include <map>
 extern "C" {
 #include "engine.h"
 }
@@ -42,8 +44,27 @@ struct Inst {
     std::vector<FEnt> ents;
     int fpage = 0;
     std::vector<std::pair<std::string, std::string> > roots;   // label, path
+    // One touch of a button reaches us as two sets, and a redraw makes the host report the button's value back on
+    // top of that, so a step taken on every set above 0.5 is taken two or three times. Each button remembers when
+    // it last acted; anything within TAP_MS of that is the same touch.
+    std::map<std::string, double> tap_at;
 };
 static const int BK_TILES = 8, PT_TILES = 24;       // tiles on the BROWSE page: bank rows, patch grid cells
+static const double TAP_MS = 250;
+
+static double now_ms() {
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return t.tv_sec * 1000.0 + t.tv_nsec / 1000000.0;
+}
+/* True once per touch of `key`. Buttons only: a knob's every value matters, a button's repeats do not. */
+static bool tap_once(Inst *s, const char *key) {
+    double t = now_ms();
+    std::map<std::string, double>::iterator it = s->tap_at.find(key);
+    if (it != s->tap_at.end() && t - it->second < TAP_MS) return false;
+    s->tap_at[key] = t;
+    return true;
+}
 
 // The panel shows voice count (8 digits) and legato mode (4 labels) as pictures: snap the engine to the same
 // step the picture shows, so what is displayed is what plays.
@@ -358,6 +379,7 @@ void set_param(void *p, const char *key, const char *val) {
     if (!strcmp(key, "pt_scroll")) { scroll_patch(s, (int)(atof(val) + 0.5) - 1); return; }      // BROWSE patch knob: plays
     if (!strncmp(key, "bk_", 3) || !strncmp(key, "pt_", 3)) {                                      // BROWSE tiles and page arrows
         if (atof(val) < 0.5) return;                                                               // a tap, not its release
+        if (!tap_once(s, key)) return;                                                             // ... and not the same tap twice
         int k = atoi(key + 3);
         if (s->fmode) {                                                                            // file list: places on the left, files on the right
             if (!strncmp(key, "bk_", 3) && k >= 1 && k <= (int)s->roots.size()) { s->cwd = s->roots[k - 1].second; s->note.clear(); fb_list(s); s->rev++; }
@@ -381,7 +403,7 @@ void set_param(void *p, const char *key, const char *val) {
             if (nb && v != s->bank) { select_bank(s, v); load_patch(s, 0); }
         } else if (!strcmp(key, "patch")) {
             if (np && v != s->patch) load_patch(s, v);
-        } else if (atof(val) > 0.5) {                       // arrows: step and wrap around
+        } else if (atof(val) > 0.5 && tap_once(s, key)) {   // arrows: one step per touch, wrapping around
             if (!strcmp(key, "bank_next") && nb) { select_bank(s, (s->bank + 1) % nb); load_patch(s, 0); }
             else if (!strcmp(key, "bank_prev") && nb) { select_bank(s, (s->bank + nb - 1) % nb); load_patch(s, 0); }
             else if (!strcmp(key, "patch_next") && np) load_patch(s, (s->patch + 1) % np);

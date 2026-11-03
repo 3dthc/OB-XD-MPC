@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <unistd.h>
 #include <string>
 #include <vector>
 extern "C" {
@@ -68,6 +69,27 @@ int main(int argc, char **argv) {
     // the old header arrows still work and drag the browser along
     set("bank_next", "1");
     ck(get("bk_scroll") == "1" && get("pt_scroll") == "1" || true, "header arrows still work", get("bank_name"));
+    // ---- one touch, one step -------------------------------------------------------------------------------
+    // MPC delivers a single touch of a button as two sets, and a redraw makes the host report the button's value
+    // back on top of those, so an arrow that acted on every set above 0.5 stepped two or three banks per touch.
+    set("bank", "1");
+    usleep(300000);
+    int b0i = atoi(get("bk_scroll").c_str());
+    set("bank_next", "1"); set("bank_next", "1"); set("bank_next", "1");   // one touch, as the host delivers it
+    int b1i = atoi(get("bk_scroll").c_str());
+    ck(b1i == b0i + 1, "one touch of the bank arrow steps exactly one bank",
+       std::to_string(b0i) + " -> " + std::to_string(b1i));
+    usleep(300000);                                                        // a second touch, a moment later
+    set("bank_next", "1"); set("bank_next", "1");
+    int b2i = atoi(get("bk_scroll").c_str());
+    ck(b2i == b1i + 1, "the next touch steps again, so taps are not swallowed",
+       std::to_string(b1i) + " -> " + std::to_string(b2i));
+    set("pt_scroll", "1");
+    usleep(300000);
+    int p0i = atoi(get("pt_scroll").c_str());
+    set("patch_next", "1"); set("patch_next", "1"); set("patch_next", "1");
+    ck(atoi(get("pt_scroll").c_str()) == p0i + 1, "and one touch of the patch arrow steps exactly one patch",
+       std::to_string(p0i) + " -> " + get("pt_scroll"));
     // ---- the loader: LOAD BANK / LOAD PRESET turn the lists into a file browser, and a tap copies the file into my-banks for good ----
     std::string plug = argv[1], src = argv[2];
     write_fxp(src + "/sub/Test One.fxp", "Test One");
