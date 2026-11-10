@@ -17,7 +17,7 @@ static void ck(bool c, const char *what, const std::string &got) { printf("%s %s
 static std::string tile(const char *pre, int n, const char *suf = "") { char k[32]; snprintf(k, 32, "%s%d%s", pre, n, suf); return get(k); }
 static int lit(const char *pre, int count) { int c = 0; for (int i = 1; i <= count; i++) if (tile(pre, i, "_on") == "1") c++; return c; }
 
-static int tap_text(const char *pre, int count, const std::string &t) { for (int i = 1; i <= count; i++) if (tile(pre, i) == t) { char k[32]; snprintf(k, 32, "%s%d", pre, i); set(k, "1"); set(k, "0"); return i; } return 0; }
+static int tap_text(const char *pre, int count, const std::string &t) { for (int i = 1; i <= count; i++) if (tile(pre, i) == t) { char k[32]; snprintf(k, 32, "%s%d", pre, i); usleep(300000); set(k, "1"); set(k, "0"); return i; } return 0; }   // a finger's pace: the engine ignores the same tile again within TAP_MS
 static void write_fxp(const std::string &path, const std::string &name) {
     std::string xml = "<discoDSP Val_0=\"0.5\" voiceCount=\"8\" programName=\"" + name + "\"/>";
     std::string chunk; chunk += "\x56\x43\x32\x21"; uint32_t L = (uint32_t)xml.size() + 1; for (int i = 0; i < 4; i++) chunk += (char)((L >> (8 * i)) & 255); chunk += xml; chunk += '\0';
@@ -28,6 +28,7 @@ static void write_fxp(const std::string &path, const std::string &name) {
 static bool exists(const std::string &p) { FILE *f = fopen(p.c_str(), "rb"); if (f) fclose(f); return f != 0; }
 int main(int argc, char **argv) {
     E = mpc_engine(); P = E->create(argv[1]);
+    usleep(2200000);   // past the window in which a reload's browse-knob / LOAD values are ignored (create, set_state)
     std::string b0 = get("bank_name"), p0 = get("patch_name");
     ck(tile("bk_", 1) != " " && tile("bk_", 2) != " " && tile("bk_", 5) == " ", "bank list: rows 1..4 named, row 5 blank", tile("bk_", 1) + " | " + tile("bk_", 2));
     ck(lit("bk_", 7) == 1 && tile("bk_", 1, "_on") == "1", "first bank lit at start", "");
@@ -152,6 +153,19 @@ int main(int argc, char **argv) {
     E->destroy(P); P = E->create(argv[1]);
     set("state", st);
     ck(get("bank_name") == sbn && get("patch_name") == spn && get("cutoff").substr(0, 5) == "0.321", "state restores into a fresh plugin (project reload)", get("bank_name") + " / " + get("patch_name"));
+    ck(get("bk_scroll") == get("bank"), "...and the browser looks at the restored bank", get("bk_scroll") + " vs " + get("bank"));
+    // the host replaying values one by one after the state, with the browser left on another bank when saved
+    set("bk_scroll", "4"); set("pt_scroll", "1"); set("load_mode", "1");
+    ck(get("patch_name") == spn && get("cutoff").substr(0, 5) == "0.321" && get("load_mode") == "0",
+       "values replayed after a reload: the patch knob loads nothing, no file list opens", get("bank_name") + " / " + get("patch_name"));
+    // a project saved before 0.4.6 (no state): values one by one into a fresh plugin
+    E->destroy(P); P = E->create(argv[1]);
+    set("bank", "2"); set("patch", "5"); set("cutoff", "0.321"); set("bk_scroll", "4"); set("pt_scroll", "1"); set("load_mode", "1");
+    ck(get("bank_name") == sbn && get("patch_name") == spn && get("cutoff").substr(0, 5) == "0.321" && get("load_mode") == "0",
+       "an old project keeps its patch and edits (the browse knob's saved value loads nothing)", get("bank_name") + " / " + get("patch_name"));
+    usleep(2200000);
+    set("bk_scroll", "1"); set("pt_scroll", "2");
+    ck(get("patch_name") != spn, "a moment later the patch knob plays again", get("patch_name"));
     printf("%s\n", fails ? "FAILED" : "PASSED");
     return fails ? 1 : 0;
 }

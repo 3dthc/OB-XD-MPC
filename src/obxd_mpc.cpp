@@ -30,6 +30,7 @@ struct Inst {
     int theme = 0;                           // the panel's colour theme (the THEME option on the MORE page); the skin swaps pictures, the engine just remembers it
     double bpm = 0;                          // host tempo ("lfo_bpm"; 0 = not told yet, 120 is used)
     double secs = 0;                         // seconds since the transport last started (free-running when stopped)
+    double quiet_until = 0;                  // wall clock: until then a project's values for the browse knob / LOAD menu are ignored
     int rev = 1;                             // bumped when a bank or patch loads, so the wrapper redraws every control
     // The BROWSE page: a bank list and a patch grid. It looks at one bank (bb) and one page of its patches (ppage) without
     // loading anything; only a patch tap or the patch knob changes the sound.
@@ -366,6 +367,13 @@ int get_state(Inst *s, char *buf, int n) {
     return (int)o.size();
 }
 
+static double wall_s() {
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return (double)t.tv_sec + t.tv_nsec / 1e9;
+}
+static const double QUIET_S = 2.0;   // after opening or a state restore, see set_param's pt_scroll / load_mode
+
 void set_state(Inst *s, const char *val) {
     std::string in = val;
     if (in.compare(0, strlen(STATE_MAGIC), STATE_MAGIC)) return;
@@ -414,6 +422,10 @@ void set_state(Inst *s, const char *val) {
     }
     apply_tune(s);
     s->synth.allNotesOff();
+    s->bb = s->bank;                                       // the browser looks at the restored bank, not where it was left
+    s->ppage = s->patches.empty() ? 0 : s->patch / PT_TILES;
+    s->fmode = 0;
+    s->quiet_until = wall_s() + QUIET_S;
     s->rev++;
 }
 
@@ -428,6 +440,7 @@ void *create(const char *data_dir) {
     scan_all(s);
     fb_roots(s);
     if (!s->banks.empty()) { select_bank(s, 0); load_patch(s, 0); }
+    s->quiet_until = wall_s() + QUIET_S;     // MPC puts a project's values back right after it opens the plugin
     return s;
 }
 void destroy(void *p) { delete (Inst *)p; }
@@ -460,6 +473,11 @@ void set_param(void *p, const char *key, const char *val) {
         }
         return;
     }
+    // A project's values for the BROWSE patch knob and the LOAD menu say where the browser was looking, not a turn or a
+    // tap: put back one by one (a project saved before 0.4.6, or the host replaying values after the state), the knob's
+    // loaded the first patch of a bank that was only being looked at, over the saved sound, and the menu's opened a file
+    // list. Just after opening or a state restore they are ignored.
+    if ((!strcmp(key, "pt_scroll") || !strcmp(key, "load_mode")) && wall_s() < s->quiet_until) return;
     if (!strcmp(key, "load_mode")) { fb_open(s, atoi(val)); return; }                                 // the LOAD drop-down: PATCHES / LOAD BANK / LOAD PRESET
     if (s->fmode && (!strcmp(key, "bk_scroll") || !strcmp(key, "pt_scroll"))) return;               // the knobs rest while a file list is up
     if (!strcmp(key, "bk_scroll")) { browse_bank(s, (int)(atof(val) + 0.5) - 1); return; }        // BROWSE bank knob: look only

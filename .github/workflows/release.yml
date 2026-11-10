@@ -1,7 +1,9 @@
 # Builds OB-Xd for MPC in GitHub Actions and attaches OB-Xd-<version>-mpc-armv7.zip to a DRAFT release. The zip ships only
 # the cleared banks committed in banks/ (Moby Pixel and the three CC0 banks; .gitignore keeps anything else out of the repo).
 # Actions -> Release -> Run workflow, enter the version. Install that zip on an MPC, check it, then publish the draft.
-# mpc-vst-plugins is pinned to one commit in both places below.
+# Release notes: write docs/releases/v<version>.md first -- what changed and what was fixed since the last release (not
+# install steps; those are in INSTALL.md inside the zip). The draft's notes are that file.
+# mpc-vst-plugins is pinned in both places below: the workflow (8dd4c2f + notes from docs/releases) and its tools (8dd4c2f).
 # No host_test: the toolchain's generic bank-stepping checks expect a full range of banks, and this engine clamps the bank
 # to the ones it finds (4 in a release), so they fail by design (they did before the 2026-10-21 toolchain too).
 name: Release
@@ -20,7 +22,7 @@ on:
 
 jobs:
   vst:
-    uses: 3dthc/mpc-vst-plugins/.github/workflows/vst-release.yml@8dd4c2f0c728459b4e96859460e404460283919a
+    uses: 3dthc/mpc-vst-plugins/.github/workflows/vst-release.yml@e6612e9195cbe3d707791c9c3793da1431da35a0
     permissions: { contents: write }
     with:
       tag: ob-xd-mpc-${{ inputs.version }}
