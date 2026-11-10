@@ -555,13 +555,14 @@ def main():
         """The drop-down's field: a solid dark LCD window with a chevron, drawn into the page picture (the popup itself draws no box)."""
         x0, y0, x1, y1 = box
         d_ = ImageDraw.Draw(tb_)
-        d_.rounded_rectangle([x0, y0, x1, y1], radius=6, fill=(14, 19, 28))
-        d_.line([x0 + 6, y0 + 2, x1 - 6, y0 + 2], fill=(52, 62, 80), width=1)                     # a faint lit top edge
+        gl_ = th_["glass"]
+        d_.rounded_rectangle([x0, y0, x1, y1], radius=6, fill=gl_)
+        d_.line([x0 + 6, y0 + 2, x1 - 6, y0 + 2], fill=tuple(min(255, c + 40) for c in gl_), width=1)                     # a faint lit top edge
         disp_ = tuple(int(th_["disp"][j:j + 2], 16) for j in (0, 2, 4))
         d_ = ImageDraw.Draw(tb_)
         cx_, cy_ = x1 - 26, (y0 + y1) // 2
         d_.polygon([(cx_ - 9, cy_ - 5), (cx_ + 9, cy_ - 5), (cx_, cy_ + 6)], fill=(242, 246, 251))
-        d_.rounded_rectangle([x0, y0, x1, y1], radius=6, outline=(120, 135, 160), width=1)
+        d_.rounded_rectangle([x0, y0, x1, y1], radius=6, outline=tuple(th_["acc"]), width=1)
     # the open list's panel: solid dark glass, stretched over the list's rectangle
     lp = Image.new("RGB", (300, 150), (14, 19, 28))
     ImageDraw.Draw(lp).rounded_rectangle([0, 0, 299, 149], radius=8, outline=(120, 135, 160), width=2, fill=(14, 19, 28))
@@ -575,7 +576,7 @@ def main():
     nk_, nt_ = len(MORE_KNOBS), len(MORE_TOGGLES)
     for ti, th in enumerate(panel_draw.THEMES):
         tb = Image.new("RGBA", (AREA_W, AREA_H), (0, 0, 0, 255))
-        panel_draw._plate(tb, th["base"] or plate_rgb, th["noise"])
+        panel_draw._plate(tb, th["base"] or plate_rgb, th["noise"], th.get("base2"))
         panel_draw._sheen(tb)
         tb = tb.convert("RGB")
         pl_rgb = tb.getpixel((AREA_W // 2, 2))
@@ -586,7 +587,7 @@ def main():
         for (x0, y0, x1, y1) in more_panels:
             d_.rectangle([x0, y0, x1, y1], fill=pan)
             panel_draw._hline(tb, x0, x1, y0, th["rule"], h=2)
-            panel_draw._hline(tb, x0, x1, y0 + 2, th["div_l"] if th["key"] != "slate" else (120, 126, 150), h=1, peak=90)
+            panel_draw._hline(tb, x0, x1, y0 + 2, th["div_l"], h=1, peak=90)
             panel_draw._hline(tb, x0, x1, y1 - 1, tuple(max(0, v - 14) for v in pan), h=2, peak=255, fade=1)
         tb.paste(theme_pb[ti].convert("RGB").crop((0, 0, 28, AREA_H)), (0, 0))
         tb.paste(theme_pb[ti].convert("RGB").crop((AREA_W - 28, 0, AREA_W, AREA_H)), (AREA_W - 28, 0))
@@ -611,40 +612,52 @@ def main():
     BR_WELLS = [(40, 10, 360, 74), (376, 10, 960, 74), (1072, 10, 1176, 74)]        # bank, patch, page
     title_font = panel_draw._font(panel_draw.FONT_TITLE, 18)
     for ti, th in enumerate(panel_draw.THEMES):
-        tb = Image.new("RGBA", (AREA_W, AREA_H), (0, 0, 0, 255))
-        panel_draw._plate(tb, th["base"] or plate_rgb, th["noise"])
-        panel_draw._sheen(tb)
-        tb = tb.convert("RGB")
-        pl_rgb = tb.getpixel((AREA_W // 2, 2))
-        dark = sum(pl_rgb) < 300
-        pan = tuple(min(255, v + 16) if dark else max(0, v - 20) for v in pl_rgb)
-        d_ = ImageDraw.Draw(tb)
-        panel_draw.CUR.update(th)
+        # BROWSE has its own look: a deep "library" backdrop in the theme's hue with a soft glow of its accent, no wooden cheeks, and frosted glass
+        # cards (rounded, a lit top edge, an accent hairline) instead of the hardware panels of the knob pages
+        import numpy as _np
         from PIL import ImageFilter
-        def shadow(box, grow=0, alpha=150, blur=7, dy=4):
+        acc = tuple(th["acc"])
+        b1 = th["base"] or plate_rgb
+        b2 = th.get("base2") or tuple(int(c * 0.6) for c in b1)
+        k1, k2 = (0.50, 0.22) if sum(b1) < 330 else (0.46, 0.26)
+        tb = Image.new("RGBA", (AREA_W, AREA_H), (0, 0, 0, 255))
+        panel_draw._plate(tb, tuple(int(c * k1) for c in b1), 0.35, tuple(int(c * k2) for c in b2))
+        a_ = _np.asarray(tb.convert("RGB"), dtype="float32")
+        yy, xx = _np.mgrid[0:AREA_H, 0:AREA_W].astype("float32")
+        glow = _np.exp(-(((xx - 880) / 640.0) ** 2 + ((yy - 330) / 360.0) ** 2))[:, :, None] * (0.20 if sum(b1) < 330 else 0.30) * th.get("glowk", 1.0)
+        glow2 = _np.exp(-(((xx - 120) / 360.0) ** 2 + ((yy - 560) / 200.0) ** 2))[:, :, None] * 0.10 * th.get("glowk", 1.0)
+        a_ = a_ * (1 - glow - glow2) + _np.asarray(acc, dtype="float32")[None, None, :] * (glow + glow2)
+        a_ = a_ * (1 - (yy % 4 == 0)[:, :, None] * 0.06)                 # fine scan lines, like a screen
+        tb = Image.fromarray(_np.clip(a_, 0, 255).astype("uint8"), "RGB")
+        panel_draw.CUR.clear(); panel_draw.CUR.update(th)
+        def shadow(box, alpha=170, blur=11, dy=6):
             x0, y0, x1, y1 = box
             sh = Image.new("L", tb.size, 0)
-            ImageDraw.Draw(sh).rectangle([x0 - grow, y0 - grow + dy, x1 + grow, y1 + grow + dy], fill=alpha)
+            ImageDraw.Draw(sh).rounded_rectangle([x0, y0 + dy, x1, y1 + dy], radius=16, fill=alpha)
             sh = sh.filter(ImageFilter.GaussianBlur(blur))
             tb.paste(Image.new("RGB", tb.size, (0, 0, 0)), (0, 0), sh)
-        for box in (BR_BANKS, BR_PATCH) + tuple(BR_WELLS):
+        for box in (BR_BANKS, BR_PATCH):
             shadow(box)
-        d_ = ImageDraw.Draw(tb)
-        lite = tuple(min(255, v + 34) for v in pan)
-        dim = tuple(max(0, v - 30) for v in pan)
-        for (x0, y0, x1, y1), ttl in ((BR_BANKS, "BANKS"), (BR_PATCH, "PATCHES")):
-            for yy in range(y1 - y0 + 1):                         # a soft top-to-bottom body gradient instead of a flat fill
-                t = yy / float(max(1, y1 - y0))
-                c = tuple(int(lite[i] * (1 - t) * 0.35 + pan[i] * (0.65 + 0.35 * (1 - t)) + dim[i] * t * 0.0) if False else int(pan[i] + (lite[i] - pan[i]) * (1 - t) * 0.45 - (pan[i] - dim[i]) * t * 0.55) for i in range(3))
-                d_.line([x0, y0 + yy, x1, y0 + yy], fill=c)
-            panel_draw._section(tb, d_, x0, x1, y0 + 2, " ", title_font)                       # the title itself is a live readout (it changes with the LOAD mode)
-            d_.rectangle([x0, y0, x1, y1], outline=tuple(max(0, v - 46) for v in pan), width=1)          # dark hairline round the panel
-            d_.line([x0 + 1, y0 + 1, x1 - 1, y0 + 1], fill=tuple(min(255, v + 44) for v in pan), width=1)  # lit top edge
-            panel_draw._hline(tb, x0, x1, y1 - 1, tuple(max(0, v - 14) for v in pan), h=2, peak=255, fade=1)
+        for box in BR_WELLS:
+            shadow(box, alpha=140, blur=7, dy=4)
+        for (x0, y0, x1, y1) in (BR_BANKS, BR_PATCH):
+            k = 3
+            m = Image.new("L", ((x1 - x0 + 1) * k, (y1 - y0 + 1) * k), 0)
+            ImageDraw.Draw(m).rounded_rectangle([0, 0, m.size[0] - 1, m.size[1] - 1], radius=16 * k, fill=255)
+            m = m.resize((x1 - x0 + 1, y1 - y0 + 1), Image.LANCZOS)
+            body = _np.asarray(tb.crop((x0, y0, x1 + 1, y1 + 1)), dtype="float32")
+            g = _np.linspace(1, 0, y1 - y0 + 1, dtype="float32")[:, None, None]
+            body = body * 0.42 + _np.asarray(acc, dtype="float32")[None, None, :] * (0.05 + 0.05 * g) * th.get("glowk", 1.0) + 255 * 0.045 * g + th.get("lift", 0)      # frosted: the backdrop darkened, tinted, lit from above
+            tb.paste(Image.fromarray(_np.clip(body, 0, 255).astype("uint8"), "RGB"), (x0, y0), m)
+            d_ = ImageDraw.Draw(tb)
+            ring = Image.new("RGBA", tb.size, (0, 0, 0, 0))
+            ImageDraw.Draw(ring).rounded_rectangle([x0, y0, x1, y1], radius=16, outline=acc + (96,), width=1)
+            tb.paste(ring, (0, 0), ring)
+            panel_draw._hline(tb, x0 + 22, x1 - 22, y0 + 44, acc, h=1, peak=150, fade=70)     # the accent rule under the title
         for (x0, y0, x1, y1) in BR_WELLS:
             panel_draw._well(tb, x0, y0, x1, y1)
         popup_field(tb, th, POP_BR)
-        tb.paste(theme_pb[ti].convert("RGB").crop((0, 0, 28, AREA_H)), (0, 0))
+        tb.paste(theme_pb[ti].convert("RGB").crop((0, 0, 28, AREA_H)), (0, 0))                       # the wooden cheeks, as on the other pages
         tb.paste(theme_pb[ti].convert("RGB").crop((AREA_W - 28, 0, AREA_W, AREA_H)), (AREA_W - 28, 0))
         tb.save(os.path.join(img, "browse_bg_%d.png" % ti))
 
@@ -654,13 +667,10 @@ def main():
         k = 4
         panel_draw.CUR.update(th_)
         tint, alpha, gloss, rim = th_["well"]
-        disp = tuple(int(th_["disp"][j:j + 2], 16) for j in (0, 2, 4))
-        if th_["key"] == "grey":                                       # the grey skin's light LCD green would make light text unreadable: dark green glass, lime rim
-            tint, disp, rim, gloss = (26, 34, 24), (176, 232, 120), (96, 110, 88), 40
-        elif th_["key"] == "retro":
-            rim = (110, 96, 80)
-        base = tuple(max(0, min(255, int(c))) for c in th_["base"]) if th_["base"] else (71, 73, 90)
-        pan_ = tuple(min(255, v + 16) if sum(base) < 300 else max(0, v - 20) for v in base)
+        tint, disp = th_["glass"], tuple(th_["acc"])                  # dark glass in the theme's hue, lit in its accent
+        rim = tuple(int(c * 0.55 + 40) for c in disp)
+        gloss = 34
+        pan_ = tuple(int(c * 0.9) for c in th_["glass"])             # the corners behind the rounded window blend into the card
         cv = Image.new("RGB", (w * k, h * k), pan_)
         # the well at 4x: tinted glass, inner shadow along the top, gloss over the upper half, light rim
         W_, H_ = w * k, h * k
@@ -804,7 +814,7 @@ def main():
                     (x0 + x1) // 2, Y_OFF + y0 + 14, x1 - x0 - 8, 24, th["cap"], wh))
             L.append('readout cx=%d cy=%d w=%d h=%d label="" key=%s box=0 tsize=%d tcolor=%s talign=%s tpad=%d%s' % (
                 (x0 + x1) // 2, Y_OFF + y0 + 42, x1 - x0 - 8, 38, key, tsz, th["disp"], al, 8 if al == "left" else 0, wh))
-        ink_ = "%02x%02x%02x" % tuple(th["ink"])
+        ink_ = th["bink"]
         for (x0, y0, x1, y1), tkey in ((BR_BANKS, "br_bank_title"), (BR_PATCH, "br_patch_title")):
             L.append('readout cx=%d cy=%d w=%d h=%d label="" key=%s box=0 tsize=24 tcolor=%s talign=center tpad=0%s' % (
                 (x0 + x1) // 2, Y_OFF + y0 + 18, x1 - x0 - 16, 30, tkey, ink_, wh))
@@ -813,7 +823,7 @@ def main():
             sx, Y_OFF + 42, key, "left" if "prev" in key else "right", "left" if "prev" in key else "right", SEL_BW, SEL_H))
     TILE = 'tsize=24 tweight=semibold talign=left tx=22'
     for ti_ in range(nth):
-        tl = TILE + " tcolor=f4f7fb when=theme:%d" % ti_
+        tl = TILE + " tcolor=%s when=theme:%d" % (panel_draw.THEMES[ti_].get("tx", "f4f7fb"), ti_)
         L.append('list x=52 y=%d w=266 h=394 cols=1 rows=8 th=44 gap=6 key=bk img=images/tile_bk_off_%d.png img_on=images/tile_bk_on_%d.png %s' % (Y_OFF + 128, ti_, ti_, tl))
         L.append('list x=358 y=%d w=870 h=440 cols=3 rows=8 th=48 gap=8 key=pt order=cols img=images/tile_pt_off_%d.png img_on=images/tile_pt_on_%d.png %s' % (Y_OFF + 128, ti_, ti_, tl))
     L.append('popup cx=185 cy=%d w=266 h=44 label="" key=load_mode field=none img=images/popup_list.png accent=f2f6fb' % (Y_OFF + 574))      # PATCHES / LOAD BANK / LOAD PRESET: turns the two lists into a file browser
@@ -824,11 +834,10 @@ def main():
           'picture x=0 y=%d w=%d h=%d key=theme files="%s" fit=stretch' % (
               Y_OFF, AREA_W, AREA_H, ",".join("images/more_bg_%d.png" % i for i in range(nth)))]
     nk = len(MORE_KNOBS)
-    VAL = {"slate": "96cdff", "grey": "22242a", "black": "ffb040", "retro": "3a2a20"}     # the live value's colour on each theme's panel
     for i, (key, label) in enumerate(MORE_KNOBS):
         for ti, th in enumerate(panel_draw.THEMES):
             L.append('knob cx=%d cy=%d r=%d label="" key=%s strip=%s ns=0 vs=30 ink_dim=%s when=theme:%d' % (
-                round(60 + 1160 * (i + 0.5) / nk), Y_OFF + 170, rK, key, knob_path, VAL[th["key"]], ti))
+                round(60 + 1160 * (i + 0.5) / nk), Y_OFF + 170, rK, key, knob_path, th["val"], ti))
     nt = len(MORE_TOGGLES)
     for i, (key, label) in enumerate(MORE_TOGGLES):
         L.append('toggle cx=%d cy=%d label="" key=%s img=images/btn_off.png img_on=images/btn_on.png w=%d h=%d ns=0' % (

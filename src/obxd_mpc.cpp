@@ -334,6 +334,89 @@ void fb_tap(Inst *s, int k) {                                            // tile
 }
 
 
+// Project state: what the wrapper stores in a saved project and hands back on load (effGetChunk/effSetChunk, the "state" key).
+// One "key=value" per line, so a parameter added later leaves old projects loading. The bank goes by file name and the patch
+// by name, because indexes shift when a bank is added to my-banks; the parameter values are always restored, so edits to a
+// patch survive and the sound comes back even when its bank is gone.
+// (Written from dylan-travis's patch on issue #1.)
+static const char *STATE_MAGIC = "obxd-state 1";
+
+std::string bank_id(const obxdbank::BankFile &b) {
+    size_t k = b.path.find_last_of('/');
+    return k == std::string::npos ? b.path : b.path.substr(k + 1);
+}
+
+int get_state(Inst *s, char *buf, int n) {
+    std::string o = STATE_MAGIC;
+    char line[96];
+    if (!s->banks.empty()) o += "\nbank=" + bank_id(s->banks[s->bank]);
+    if (!s->patches.empty()) {
+        o += "\npatch_name=" + s->patches[s->patch].name;
+        snprintf(line, sizeof line, "\npatch=%d", s->patch);
+        o += line;
+    }
+    snprintf(line, sizeof line, "\nbank_index=%d\nmaster_hz=%.9g\ntheme=%d", s->bank, s->hz, s->theme);
+    o += line;
+    for (int i = 0; i < kObxdParamCount; i++) {
+        snprintf(line, sizeof line, "\n%s=%.9g", kObxdParams[i].key, s->vals[kObxdParams[i].id]);
+        o += line;
+    }
+    if ((int)o.size() >= n) return -1;                     // no partial state: a cut-off one would restore half a patch
+    memcpy(buf, o.c_str(), o.size() + 1);
+    return (int)o.size();
+}
+
+void set_state(Inst *s, const char *val) {
+    std::string in = val;
+    if (in.compare(0, strlen(STATE_MAGIC), STATE_MAGIC)) return;
+    std::vector<std::pair<std::string, std::string> > kv;
+    std::string bank_file, patch_name;
+    int bank_index = -1, patch = -1;
+    size_t at = in.find('\n');
+    while (at != std::string::npos) {
+        size_t next = in.find('\n', at + 1);
+        std::string l = in.substr(at + 1, next == std::string::npos ? std::string::npos : next - at - 1);
+        at = next;
+        size_t eq = l.find('=');
+        if (eq == std::string::npos) continue;
+        std::string k = l.substr(0, eq), v = l.substr(eq + 1);
+        if (k == "bank") bank_file = v;
+        else if (k == "patch_name") patch_name = v;
+        else if (k == "bank_index") bank_index = atoi(v.c_str());
+        else if (k == "patch") patch = atoi(v.c_str());
+        else kv.push_back(std::make_pair(k, v));
+    }
+    int b = -1;
+    for (int i = 0; i < (int)s->banks.size() && b < 0; i++) if (bank_id(s->banks[i]) == bank_file) b = i;
+    if (b >= 0) {
+        select_bank(s, b);
+        int idx = -1;
+        for (int i = 0; i < (int)s->patches.size() && idx < 0; i++) if (s->patches[i].name == patch_name) idx = i;
+        load_patch(s, idx >= 0 ? idx : patch);
+    } else if (bank_index >= 0 && bank_index < (int)s->banks.size() && bank_file.empty()) {
+        select_bank(s, bank_index);
+        load_patch(s, patch);
+    }
+    for (size_t i = 0; i < kv.size(); i++) {
+        const char *k = kv[i].first.c_str(), *v = kv[i].second.c_str();
+        if (!strcmp(k, "master_hz")) {
+            float h = (float)atof(v);
+            s->hz = h < 400.f ? 400.f : (h > 480.f ? 480.f : h);
+        } else if (!strcmp(k, "theme")) {
+            int t = atoi(v);
+            s->theme = t < 0 ? 0 : (t > 4 ? 4 : t);
+        } else {
+            int f = find_key(k);
+            if (f < 0) continue;
+            float x = (float)atof(v);
+            apply(s, kObxdParams[f].id, x < 0 ? 0 : (x > 1 ? 1 : x));
+        }
+    }
+    apply_tune(s);
+    s->synth.allNotesOff();
+    s->rev++;
+}
+
 void *create(const char *data_dir) {
     Inst *s = new Inst();
     memset(s->vals, 0, sizeof s->vals);
@@ -369,8 +452,12 @@ void midi(void *p, const uint8_t *m, int len) {
 
 void set_param(void *p, const char *key, const char *val) {
     Inst *s = (Inst *)p;
+    if (!strcmp(key, "state")) { set_state(s, val); return; }
     if (!strcmp(key, "stop")) {                            // STOP button: panic (all notes off, all sound off)
-        if (atof(val) > 0.5) s->synth.allSoundOff();
+        if (atof(val) > 0.5) {
+            s->synth.allSoundOff();
+            s->rev++;                                      // redraw: the skin keeps the button lit until the host is told it is back at 0 (get_param "stop" is always 0)
+        }
         return;
     }
     if (!strcmp(key, "load_mode")) { fb_open(s, atoi(val)); return; }                                 // the LOAD drop-down: PATCHES / LOAD BANK / LOAD PRESET
@@ -400,7 +487,9 @@ void set_param(void *p, const char *key, const char *val) {
         int nb = (int)s->banks.size(), np = (int)s->patches.size();
         int v = (int)(atof(val) + 0.5) - 1;                  // the controls count from 1
         if (!strcmp(key, "bank")) {
-            if (nb && v != s->bank) { select_bank(s, v); load_patch(s, 0); }
+            // MPC pokes parameter 0 (Bank here) to the far end of its range around load, save and STOP. select_bank() clamps, so
+            // that landed on the last bank and loaded its first patch over the sound. A bank that isn't there does nothing.
+            if (nb && v != s->bank && v >= 0 && v < nb) { select_bank(s, v); load_patch(s, 0); }
         } else if (!strcmp(key, "patch")) {
             if (np && v != s->patch) load_patch(s, v);
         } else if (atof(val) > 0.5 && tap_once(s, key)) {   // arrows: one step per touch, wrapping around
@@ -413,7 +502,7 @@ void set_param(void *p, const char *key, const char *val) {
     }
     if (!strcmp(key, "theme")) {
         int t = atoi(val);
-        s->theme = t < 0 ? 0 : (t > 3 ? 3 : t);
+        s->theme = t < 0 ? 0 : (t > 4 ? 4 : t);
         return;
     }
     if (!strcmp(key, "lfo_bpm")) {
@@ -441,6 +530,7 @@ void set_param(void *p, const char *key, const char *val) {
 
 int get_param(void *p, const char *key, char *buf, int n) {
     Inst *s = (Inst *)p;
+    if (!strcmp(key, "state")) return get_state(s, buf, n);
     if (!strcmp(key, "master_hz")) return snprintf(buf, n, "%.1f", s->hz);
     if (!strcmp(key, "stop")) return snprintf(buf, n, "0");
     if (!strcmp(key, "theme")) return snprintf(buf, n, "%d", s->theme);

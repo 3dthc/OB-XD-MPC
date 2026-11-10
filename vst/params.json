@@ -690,10 +690,11 @@
       "key": "theme",
       "name": "Theme",
       "options": [
-        "Slate",
-        "MPC Grey",
+        "Ocean",
+        "Violet",
         "MPC Black",
-        "Retro"
+        "Tangerine",
+        "Jade"
       ],
       "default": 0
     },

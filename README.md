@@ -5,7 +5,7 @@ A native ARM VST2 build of the OB-Xd synthesizer for first-generation Akai MPC /
 
 **Unofficial:** not affiliated with or endorsed by discoDSP, 2Dat, Akai or the community OB-Xd project. See [CREDITS.md](CREDITS.md).
 
-![The four themes: Slate, MPC Grey, MPC Black, Retro (OSC page)](docs/screenshots/obxd-themes.png)
+![The five themes: Ocean, Violet, MPC Black, Tangerine, Jade (OSC page)](docs/screenshots/obxd-themes.png)
 ![OSC page (render with sample names)](docs/screenshots/obxd.png)
 ![FILTER page](docs/screenshots/obxd-filter.png)
 ![BROWSE page](docs/screenshots/obxd-browse.png)
@@ -17,10 +17,11 @@ A native ARM VST2 build of the OB-Xd synthesizer for first-generation Akai MPC /
   knobs and buttons for fingers (tabs at the top): **OSC** (master, global, oscillators, mixer, control, amp envelope), **FILTER**
   (filter, filter envelope, modulation, voice variation) and **SETTINGS** for the controls the panel has no place for.
   BANK, PATCH and BPM are on the OSC and FILTER pages.
-- **THEME** (a drop-down in the top left of the SETTINGS page, touch only): four looks, switched live. **Slate** (default), **MPC Grey** (classic MPC grey with
-  green LCD displays), **MPC Black** (MPC1000-style black with amber displays) and **Retro** (cream with orange LED displays). The BANK / PATCH / BPM
-  displays, legato and voices readouts change colour with it.  Saved as a normal parameter at the end of the list,
-  so older projects load unchanged.
+- **THEME** (a drop-down in the top left of the SETTINGS page, touch only): five looks, switched live. **Ocean** (default, deep blue with cyan displays),
+  **Violet** (deep purple with lilac displays), **MPC Black** (black with red displays), **Tangerine** (orange with amber displays on smoked glass) and
+  **Jade** (light seafoam with mint displays). The BANK / PATCH / BPM displays, legato and voices readouts, and the BROWSE page change with it.
+  Saved as a normal parameter at the end of the list, so older projects load unchanged (the old Slate, MPC Grey and Retro slots now show Ocean,
+  Violet and Tangerine).
 - **FREQUENCY (Hz):** reference pitch, 400 to 480 Hz (default 440), on the SETTINGS page. It sits on top of TUNE and is not stored in presets.
 - **STOP:** a panic button (all notes and sound off) next to VAM. LEARN, CLEAR and MENU are removed (no MIDI learn on the MPC).
 - **BANK / PATCH selector** at the top centre of the OSC and FILTER pages, each with a left and a right arrow (right = next, left = previous, they wrap around). Banks are plain OB-Xd `.fxb` files in the `banks` folder next to the plugin; the release ships the Moby Pixel bank and three banks of CC0 (public domain) patches. Your own banks go in a `my-banks` folder next to `banks`; `banks` itself is replaced on every install, so it only ever holds what the release ships.

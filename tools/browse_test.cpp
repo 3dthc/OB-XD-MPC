@@ -132,6 +132,26 @@ int main(int argc, char **argv) {
     E->destroy(P); P = E->create(argv[1]);                                     // a restart: everything is still there
     int fb2 = 0, mp = 0; for (int i = 1; i <= 8; i++) { if (tile("bk_", i) == "Friends Bank") fb2 = i; if (tile("bk_", i) == "My Presets") mp = i; }
     ck(fb2 > 0 && mp > 0, "after a restart both are still there", std::to_string(fb2) + "," + std::to_string(mp));
+    { int r0 = atoi(get("display_rev").c_str()); set("stop", "1"); int r1 = atoi(get("display_rev").c_str()); set("stop", "0"); int r2 = atoi(get("display_rev").c_str());
+      ck(r1 > r0 && r2 == r1 && get("stop") == "0", "STOP press asks for a redraw (the light goes out), release does not", std::to_string(r0) + "," + std::to_string(r1) + "," + std::to_string(r2)); }
+    // Project state and the host's bank pokes (issues #1 and #3)
+    E->destroy(P); P = E->create(argv[1]);
+    set("bank", "2"); set("patch", "5"); set("cutoff", "0.321");
+    std::string sbn = get("bank_name"), spn = get("patch_name");
+    char st[8192] = ""; int sl = E->get_param(P, "state", st, sizeof st);
+    ck(sl > 0 && sl < 8000, "state is written and fits the wrapper's chunk", std::to_string(sl));
+    set("bank", "1"); set("cutoff", "0.9");
+    set("state", st);
+    ck(get("bank_name") == sbn && get("patch_name") == spn, "state restores the bank and patch", get("bank_name") + " / " + get("patch_name"));
+    ck(get("cutoff").substr(0, 5) == "0.321", "...and the edited knob", get("cutoff"));
+    { std::string a = get("bank_name"), b = get("patch_name"), c = get("cutoff");
+      set("bank", "100"); set("bank", "0"); set("bank", "-3");
+      ck(get("bank_name") == a && get("patch_name") == b && get("cutoff") == c, "bank=100, 0 and negatives are ignored (STOP poke)", get("bank_name") + " / " + get("patch_name")); }
+    set("state", "junk"); set("state", "");
+    ck(get("bank_name") == sbn, "a junk state changes nothing", get("bank_name"));
+    E->destroy(P); P = E->create(argv[1]);
+    set("state", st);
+    ck(get("bank_name") == sbn && get("patch_name") == spn && get("cutoff").substr(0, 5) == "0.321", "state restores into a fresh plugin (project reload)", get("bank_name") + " / " + get("patch_name"));
     printf("%s\n", fails ? "FAILED" : "PASSED");
     return fails ? 1 : 0;
 }

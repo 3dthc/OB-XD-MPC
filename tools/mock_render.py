@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Preview of the panel pages: each tab's background plus the knob / button / selector pictures at their layout positions.
-usage: mock_render.py out_prefix [theme]   (run from the repo root after make_skin.py; writes out_prefix-osc.png, out_prefix-filter.png, ...; theme = 0..3, default 0)
+usage: mock_render.py out_prefix [theme]   (run from the repo root after make_skin.py; writes out_prefix-osc.png, out_prefix-filter.png, ...; theme = 0..4, default 0)
 Knobs are shown at frame 40, every 3rd button lit; the text widgets are stand-ins."""
 import re, sys, os
 from PIL import Image, ImageDraw, ImageFont
@@ -81,7 +81,7 @@ for name, src in zip(tabs[0::2], tabs[1::2]):
             cx_, cy_, w_, h_ = int(kv(l, "cx")), int(kv(l, "cy")) - Y_OFF, int(kv(l, "w")), int(kv(l, "h"))
             if kv(l, "field") != "none":
                 dr.rounded_rectangle([cx_ - w_ // 2, cy_ - h_ // 2, cx_ + w_ // 2, cy_ + h_ // 2], 6, fill=(18, 22, 30), outline=(110, 125, 150), width=2)
-            dr.text((cx_ - w_ // 2 + 14, cy_ - 11), (("PATCHES" if LOADER in ("", "open") else ("BANK (.FXB)" if LOADER == "bank" else "PRESET (.FXP)")) if kv(l, "key") == "load_mode" else ["Slate", "MPC Grey", "MPC Black", "Retro"][THEME]), font=f3, fill=(235, 240, 250))
+            dr.text((cx_ - w_ // 2 + 14, cy_ - 11), (("PATCHES" if LOADER in ("", "open") else ("BANK (.FXB)" if LOADER == "bank" else "PRESET (.FXP)")) if kv(l, "key") == "load_mode" else ["Ocean", "Violet", "MPC Black", "Tangerine", "Jade"][THEME]), font=f3, fill=(235, 240, 250))
             if LOADER == "open" and kv(l, "key") == "load_mode":
                 n_, rh_ = 3, 40
                 ph_ = n_ * rh_ + 12

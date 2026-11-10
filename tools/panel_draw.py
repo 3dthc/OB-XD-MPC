@@ -12,10 +12,11 @@ PATCH displays and the BPM display are on both pages.
 
 THEMES are colour schemes for the whole panel (plate, labels, section lines, the display wells and their text), drawn by the same
 code, so every page exists once per theme and the THEME option on the MORE page swaps them:
-  Slate      the community skin's blue-grey slate, ice-blue displays
-  MPC Grey   a light grey body with red accents and a green LCD (the classic grey MPC look)
+  Ocean      a deep blue gradient with cyan displays
+  Violet     a deep purple gradient with lilac displays
   MPC Black  a matte black body with red accents and amber displays (the black MPCs)
-  Retro      a cream body with orange accents and dark smoked displays (the Live II Retro Edition's classic feel)
+  Tangerine  a saturated orange body, dark ink, smoked displays with warm amber text
+  Jade       a light seafoam body with coral accents and mint displays on dark glass
 """
 import math
 import numpy as np
@@ -35,14 +36,25 @@ FONT_LABEL = "/usr/share/fonts/truetype/dejavu/DejaVuSansCondensed-Bold.ttf"
 FONT_TITLE = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 PAGES = ("osc", "filter")
 THEMES = [
-    dict(key="slate", name="Slate", base=None, noise=1.0, ink=(228, 230, 238), rule=(50, 146, 252), div_d=(14, 15, 19), div_l=(78, 80, 100),
-         logo=(232, 234, 242), well=((12, 22, 44), 215, 26, (0, 0, 0)), disp="96cdff", dim="6994c8", cap="b4d2f0"),
-    dict(key="grey", name="MPC Grey", base=(168, 170, 174), noise=0.55, ink=(34, 36, 42), rule=(198, 52, 40), div_d=(78, 80, 86), div_l=(214, 216, 220),
-         logo=(40, 42, 50), well=((112, 134, 94), 246, 22, (30, 40, 24)), disp="1c2a14", dim="3c4e30", cap="2c3a22"),
-    dict(key="black", name="MPC Black", base=(34, 35, 38), noise=0.8, ink=(234, 230, 220), rule=(214, 56, 44), div_d=(6, 6, 8), div_l=(76, 78, 84),
-         logo=(236, 232, 222), well=((16, 11, 6), 225, 22, (0, 0, 0)), disp="ffb040", dim="b07832", cap="d9b27a"),
-    dict(key="retro", name="Retro", base=(202, 194, 174), noise=0.55, ink=(54, 42, 32), rule=(226, 118, 34), div_d=(84, 70, 54), div_l=(232, 226, 210),
-         logo=(58, 46, 36), well=((30, 25, 21), 232, 22, (0, 0, 0)), disp="ff9632", dim="b46e32", cap="e8cfa8"),
+    # Fields: base / base2 = the plate's colour at the top left and the bottom right (a gradient); noise = how cloudy; ink = labels; rule = the
+    # accent line under every section title; div_d / div_l = the dividers' shade and light edge; logo; well = (glass tint, alpha, gloss, rim) of the display
+    # windows; disp / dim / cap = display text, quiet display text and display captions; glass = the BROWSE tiles' dark glass; acc = the BROWSE accent
+    # (selected tile, card edge, glow); bink = BROWSE card titles; val = a live value on the SETTINGS panels.
+    dict(key="ocean", name="Ocean", base=(24, 66, 112), base2=(8, 24, 50), noise=0.7, ink=(224, 238, 252), rule=(70, 196, 255), div_d=(4, 12, 28), div_l=(64, 116, 168),
+         logo=(228, 242, 254), well=((6, 18, 38), 225, 26, (0, 0, 0)), disp="86e6ff", dim="52aed0", cap="aad8f0",
+         glass=(8, 24, 44), acc=(70, 196, 255), bink="dff4ff", val="86e6ff"),
+    dict(key="violet", name="Violet", base=(84, 48, 134), base2=(30, 16, 62), noise=0.7, ink=(240, 232, 254), rule=(196, 118, 255), div_d=(14, 8, 30), div_l=(128, 96, 180),
+         logo=(244, 236, 255), well=((22, 11, 40), 225, 26, (0, 0, 0)), disp="e4b0ff", dim="aa7cda", cap="d0b8f0",
+         glass=(24, 13, 44), acc=(196, 118, 255), bink="f0e2ff", val="e4b0ff"),
+    dict(key="black", name="MPC Black", base=(34, 35, 38), base2=None, noise=0.8, ink=(234, 230, 220), rule=(214, 56, 44), div_d=(6, 6, 8), div_l=(76, 78, 84),
+         logo=(236, 232, 222), well=((12, 12, 14), 232, 22, (0, 0, 0)), disp="ff3b30", dim="b4302a", cap="e2766c",
+         glass=(24, 24, 27), acc=(230, 52, 44), bink="ff5a4e", val="ff4a3e", tx="ff5a4e", lift=20, glowk=0.15),
+    dict(key="tangerine", name="Tangerine", base=(232, 126, 44), base2=(176, 66, 22), noise=0.6, ink=(40, 20, 12), rule=(255, 234, 190), div_d=(122, 52, 16), div_l=(255, 176, 104),
+         logo=(42, 22, 12), well=((30, 15, 8), 235, 22, (0, 0, 0)), disp="ffc66e", dim="cc8a3c", cap="ffe4ba",
+         glass=(38, 19, 10), acc=(255, 190, 96), bink="ffe9c8", val="2a140a"),
+    dict(key="jade", name="Jade", base=(184, 220, 206), base2=(126, 174, 160), noise=0.5, ink=(18, 52, 46), rule=(228, 96, 72), div_d=(62, 102, 92), div_l=(220, 244, 234),
+         logo=(20, 58, 50), well=((14, 34, 30), 235, 22, (0, 0, 0)), disp="92f2ca", dim="56bc96", cap="c2f0de",
+         glass=(14, 34, 30), acc=(120, 242, 198), bink="d8fbee", val="13322c"),
 ]
 CUR = dict(THEMES[0])                          # the theme being drawn
 
@@ -54,7 +66,7 @@ def _font(path, size):
         return ImageFont.load_default()
 
 
-def _plate(bg, base, amp=1.0):
+def _plate(bg, base, amp=1.0, base2=None):
     """The panel's plate: its colour with soft clouds like the theme's, over the whole width between the wooden cheeks."""
     rng = np.random.default_rng(7)
 
@@ -63,7 +75,12 @@ def _plate(bg, base, amp=1.0):
         return np.asarray(Image.fromarray(g, mode="F").resize((W, H), Image.BICUBIC)) * amp
 
     n = (field(13, 7, 3.2) + field(52, 26, 1.7) + field(210, 105, 0.8) + rng.normal(0, 0.6, (H, W))) * amp
-    arr = np.clip(np.asarray(base, dtype="float32")[None, None, :] + n[:, :, None], 0, 255).astype("uint8")
+    b1 = np.asarray(base, dtype="float32")[None, None, :]
+    if base2 is not None:                                      # a diagonal gradient, top left to bottom right
+        yy, xx = np.mgrid[0:H, 0:W].astype("float32")
+        g = np.clip((xx / W) * 0.55 + (yy / H) * 0.75, 0, 1)[:, :, None]
+        b1 = b1 * (1 - g) + np.asarray(base2, dtype="float32")[None, None, :] * g
+    arr = np.clip(b1 + n[:, :, None], 0, 255).astype("uint8")
     plate = Image.fromarray(arr, "RGB").convert("RGBA")
     bg.paste(plate.crop((WOOD, 0, W - WOOD, H)), (WOOD, 0))
 
@@ -99,7 +116,7 @@ def _hline(bg, x0, x1, y, rgb, h=1, peak=255, fade=48):
 def _section(bg, d, x0, x1, y, title, tfont):
     rule = CUR["rule"]
     _hline(bg, x0, x1, y + 1, rule, h=2)
-    _hline(bg, x0, x1, y + 3, CUR["div_l"] if CUR["key"] != "slate" else (120, 126, 150), h=1, peak=90)      # a soft highlight under it
+    _hline(bg, x0, x1, y + 3, CUR["div_l"], h=1, peak=90)      # a soft highlight under it
     _hline(bg, x0, x1, y + 26, rule, h=1, peak=170)
     _text(d, (x0 + x1) / 2.0, y + 14, title, tfont, track=2.0)
 
@@ -121,6 +138,26 @@ def _sheen(bg):
     res.paste(keep.crop((0, 0, WOOD, H)), (0, 0))                  # the wooden cheeks stay as they were
     res.paste(keep.crop((W - WOOD, 0, W, H)), (W - WOOD, 0))
     bg.paste(res.convert(bg.mode), (0, 0))
+
+
+def _rails(bg):
+    """The side cheeks in the theme's own colour (a brushed metal rail with a lit inner edge) instead of the community skin's wood. MPC Black keeps the wood."""
+    if CUR["key"] == "black":
+        return
+    b1 = np.asarray(CUR["base"], dtype="float32")
+    b2 = np.asarray(CUR.get("base2") or CUR["base"], dtype="float32")
+    yy = np.linspace(0, 1, H, dtype="float32")[:, None, None]
+    col = (b1 * (1 - yy) + b2 * yy) * 0.55
+    xx = np.arange(WOOD, dtype="float32")[None, :, None]
+    shade = 1.0 + 0.10 * np.cos(xx / WOOD * np.pi)                       # a soft round
+    rng = np.random.default_rng(3)
+    grain = rng.normal(0, 1.4, (H, 1, 1)).astype("float32")             # fine horizontal brushing
+    rail = np.clip(col * shade + grain, 0, 255)
+    for x0, inner in ((0, WOOD - 1), (W - WOOD, 0)):
+        r = rail.copy()
+        r[:, inner, :] = np.clip(np.asarray(CUR["div_l"], dtype="float32"), 0, 255)          # the lit inner edge
+        r[:, 1 if inner else WOOD - 2, :] = r[:, 1 if inner else WOOD - 2, :] * 0.6
+        bg.paste(Image.fromarray(r.astype("uint8"), "RGB").convert(bg.mode), (x0, 0))
 
 
 def _divider(d, x, y0, y1):
@@ -149,7 +186,7 @@ def _well(bg, x0, y0, x1, y1):
     bg.paste(Image.new("RGBA", (w, h), (255, 255, 255, 255)), (x0, y0), Image.composite(gl, zero, m))
     d = ImageDraw.Draw(bg)
     d.rounded_rectangle([x0, y0, x1 - 1, y1 - 1], radius=5, outline=tuple(rim) + (210,))
-    d.line([x0 + 4, y1, x1 - 5, y1], fill=(CUR["div_l"] if CUR["key"] != "slate" else (150, 160, 190)) + (110,))
+    d.line([x0 + 4, y1, x1 - 5, y1], fill=CUR["div_l"] + (110,))
 
 
 def _icon(bg, kind, cx, cy):
@@ -206,8 +243,8 @@ def draw(page, theme, bg, base_rgb, logo_mask, sel_groups, sel_dw, sel_bw, sel_g
     Returns the list of control placements: dicts with kind (knob | toggle | legato | voices | vam | stop), key, cx, cy."""
     CUR.clear()
     CUR.update(THEMES[theme])
-    _plate(bg, CUR["base"] or base_rgb, CUR["noise"])
-    _sheen(bg)
+    _plate(bg, CUR["base"] or base_rgb, CUR["noise"], CUR.get("base2"))
+    _sheen(bg)                                       # the wooden cheeks at the sides stay on every theme
     logo = Image.new("RGBA", logo_mask.size, tuple(CUR["logo"]) + (0,))
     logo.putalpha(logo_mask)
     d = ImageDraw.Draw(bg)
