@@ -17,9 +17,10 @@ A native ARM VST2 build of the OB-Xd synthesizer for first-generation Akai MPC /
   knobs and buttons for fingers (tabs at the top): **OSC** (master, global, oscillators, mixer, control, amp envelope), **FILTER**
   (filter, filter envelope, modulation, voice variation) and **SETTINGS** for the controls the panel has no place for.
   BANK, PATCH and BPM are on the OSC and FILTER pages.
-- **THEME** (a drop-down in the top left of the SETTINGS page, touch only): five looks, switched live. **Ocean** (default, deep blue with cyan displays),
+- **THEME** (a drop-down in the top left of the SETTINGS page, touch only): five looks, switched live. **Ocean** (default, deep blue with red accent lines and yellow glowing displays),
   **Violet** (deep purple with lilac displays), **MPC Black** (black with red displays), **Tangerine** (orange with amber displays on smoked glass) and
-  **Jade** (light seafoam with mint displays). The BANK / PATCH / BPM displays, legato and voices readouts, and the BROWSE page change with it.
+  **Jade** (light seafoam with mint displays). The BANK / PATCH displays, legato and voices readouts, and the BROWSE page change with it. The BANK / PATCH arrows are thin chevrons inside
+  their displays; the project tempo (BPM) is shown at the top right of SETTINGS.
   Saved as a normal parameter at the end of the list, so older projects load unchanged (the old Slate, MPC Grey and Retro slots now show Ocean,
   Violet and Tangerine).
 - **FREQUENCY (Hz):** reference pitch, 400 to 480 Hz (default 440), on the SETTINGS page. It sits on top of TUNE and is not stored in presets.

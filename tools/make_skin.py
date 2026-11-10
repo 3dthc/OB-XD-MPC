@@ -57,13 +57,13 @@ MORE_TOGGLES = [("pw_env_both", "PW ENV BOTH"), ("env_pitch_both", "PITCH ENV BO
 
 # LFO SYNC button + TEMPO display (the project's tempo), in the MODULATION section's free slot and the strip under it. Panel-image px.
 SYNC_CX, SYNC_CY, SYNC_LABEL_CY = 860, 532, 565         # the button's centre and its label's centre
-TEMPO_CX, TEMPO_CY, TEMPO_W, TEMPO_H = 1167, 36, 154, 64        # top right corner
+TEMPO_CX, TEMPO_CY, TEMPO_W, TEMPO_H = 1146, 36, 110, 64        # top right corner: plain text, no box (the tempo is only shown)
 LFO_WORD_BOX, SYNC_WORD_BOX = (680, 356, 706, 371), (320, 311, 369, 327)    # where the theme prints "LFO RATE" and "SYNC"
 
 # BANK / PATCH selector geometry (plugin-area pixels): display width, button width, strip top and height; groups = (x0, key)
-SEL_DW, SEL_BW, SEL_GAP, SEL_Y0, SEL_H = 250, 56, 4, 4, 64
+SEL_DW, SEL_BW, SEL_GAP, SEL_Y0, SEL_H = 350, 56, 4, 4, 64
 # a group is the stacked up/down button (left) then the display; x0 is the group's left edge. Two groups, 16 px apart, centred on x=640
-SEL_GROUPS = [(287, "bank"), (673, "patch")]      # group = left arrow (56), display (192), right arrow (56); 16 px apart, centred on x=640
+SEL_GROUPS = [(268, "bank"), (754, "patch")]      # group = one 470 px display with the arrows inside its ends (56 + 4 + 350 + 4 + 56); 16 px apart
 
 # Bigger controls for big hands (0.3.0). The theme's pictures are scaled up by these factors; the buttons' pictures carry a
 # transparent margin, which is the extra touch area (a toggle's touch box is its picture); knobs get a bigger touch box.
@@ -505,9 +505,31 @@ def main():
                 theme_pb[ti] = pb
     bg = first_bg
     from PIL import ImageDraw as _D
-    for left in (True, False):
-        for pressed in (False, True):
-            arrow_png(left, pressed).save(os.path.join(img, "sel_%s_%s.png" % ("left" if left else "right", "on" if pressed else "off")))
+    def chevron_png(left, pressed, th_):
+        """A thin chevron in the theme's display colour on a transparent picture (the arrows live inside the displays); lit with a soft glow when pressed."""
+        from PIL import ImageFilter
+        k = 4
+        w_, h_ = SEL_BW * k, SEL_H * k
+        col_ = tuple(int(th_["disp"][j:j + 2], 16) for j in (0, 2, 4))
+        cx_, cy_ = w_ // 2, h_ // 2
+        s_ = 1 if left else -1
+        pts = [(cx_ + s_ * 7 * k, cy_ - 15 * k), (cx_ - s_ * 7 * k, cy_), (cx_ + s_ * 7 * k, cy_ + 15 * k)]
+        out = Image.new("RGBA", (w_, h_), (0, 0, 0, 0))
+        if pressed:
+            gl = Image.new("L", (w_, h_), 0)
+            _D.Draw(gl).ellipse([cx_ - 24 * k, cy_ - 24 * k, cx_ + 24 * k, cy_ + 24 * k], fill=90)
+            out.paste(Image.new("RGBA", (w_, h_), col_ + (255,)), (0, 0), gl.filter(ImageFilter.GaussianBlur(9 * k)))
+        ln = Image.new("RGBA", (w_, h_), (0, 0, 0, 0))
+        _D.Draw(ln).line(pts, fill=(255, 255, 255, 255) if pressed else col_ + (205,), width=int((5.5 if pressed else 4.5) * k), joint="curve")
+        for p_ in (pts[0], pts[2]):                                                    # round end caps
+            r_ = (2.75 if pressed else 2.25) * k
+            _D.Draw(ln).ellipse([p_[0] - r_, p_[1] - r_, p_[0] + r_, p_[1] + r_], fill=(255, 255, 255, 255) if pressed else col_ + (205,))
+        out.alpha_composite(ln)
+        return out.resize((SEL_BW, SEL_H), Image.LANCZOS)
+    for ti_c, th_c in enumerate(panel_draw.THEMES):
+        for left in (True, False):
+            for pressed in (False, True):
+                chevron_png(left, pressed, th_c).save(os.path.join(img, "sel_%s_%s_%d.png" % ("left" if left else "right", "on" if pressed else "off", ti_c)))
     plate = "%02x%02x%02x" % bg.getpixel((AREA_W // 2, 2))[:3]
 
     # MORE page: the same knobs and buttons as the other pages, on a plate with panels like theirs
@@ -709,9 +731,6 @@ def main():
         th = panel_draw.THEMES[ti]
         wh = " when=theme:%d" % ti
         H_ = []
-        H_.append('text cx=%d cy=%d label="BPM" size=1.35 color=%s%s' % (TEMPO_CX, Y_OFF + TEMPO_CY - 20, th["cap"], wh))
-        H_.append('readout cx=%d cy=%d w=%d h=%d label="" key=tempo_text box=0 tsize=30 tcolor=%s talign=center tpad=0%s' % (
-            TEMPO_CX, Y_OFF + TEMPO_CY + 12, TEMPO_W - 20, 34, th["disp"], wh))
         for (x0, key) in SEL_GROUPS:
             top = Y_OFF + SEL_Y0
             dx = x0 + SEL_BW + SEL_GAP                       # the display's left edge
@@ -723,16 +742,18 @@ def main():
         return H_
 
     def header_buttons():
-        """The BANK / PATCH arrows (the same keys in every theme). The engine reads the .fxb banks in the "banks" folder next to the
-        plugin (src/obxd_banks.h). The right arrow steps to the next bank/patch, the left to the previous (wraps)."""
+        """The BANK / PATCH arrows: thin chevrons inside the displays' ends, in each theme's display colour (the same keys in every theme). The engine
+        reads the .fxb banks in the "banks" folder next to the plugin (src/obxd_banks.h). Right = next bank / patch, left = previous (wraps)."""
         H_ = []
-        for (x0, key) in SEL_GROUPS:
-            top = Y_OFF + SEL_Y0
-            dx = x0 + SEL_BW + SEL_GAP
-            H_.append('button cx=%d cy=%d label="" key=%s_prev img=images/sel_left_off.png img_on=images/sel_left_on.png w=%d h=%d' % (
-                x0 + SEL_BW // 2, top + SEL_H // 2, key, SEL_BW, SEL_H))
-            H_.append('button cx=%d cy=%d label="" key=%s_next img=images/sel_right_off.png img_on=images/sel_right_on.png w=%d h=%d' % (
-                dx + SEL_DW + SEL_GAP + SEL_BW // 2, top + SEL_H // 2, key, SEL_BW, SEL_H))
+        for ti, th in enumerate(panel_draw.THEMES):
+            wh = " when=theme:%d" % ti
+            for (x0, key) in SEL_GROUPS:
+                top = Y_OFF + SEL_Y0
+                dx = x0 + SEL_BW + SEL_GAP
+                H_.append('button cx=%d cy=%d label="" key=%s_prev img=images/sel_left_off_%d.png img_on=images/sel_left_on_%d.png w=%d h=%d%s' % (
+                    x0 + SEL_BW // 2, top + SEL_H // 2, key, ti, ti, SEL_BW, SEL_H, wh))
+                H_.append('button cx=%d cy=%d label="" key=%s_next img=images/sel_right_off_%d.png img_on=images/sel_right_on_%d.png w=%d h=%d%s' % (
+                    dx + SEL_DW + SEL_GAP + SEL_BW // 2, top + SEL_H // 2, key, ti, ti, SEL_BW, SEL_H, wh))
         return H_
 
     TAB_NAMES = {"osc": "OSC", "filter": "FILTER"}
@@ -818,9 +839,11 @@ def main():
         for (x0, y0, x1, y1), tkey in ((BR_BANKS, "br_bank_title"), (BR_PATCH, "br_patch_title")):
             L.append('readout cx=%d cy=%d w=%d h=%d label="" key=%s box=0 tsize=24 tcolor=%s talign=center tpad=0%s' % (
                 (x0 + x1) // 2, Y_OFF + y0 + 18, x1 - x0 - 16, 30, tkey, ink_, wh))
-    for sx, key in ((1036, "pt_pg_prev"), (1212, "pt_pg_next")):
-        L.append('button cx=%d cy=%d label="" key=%s img=images/sel_%s_off.png img_on=images/sel_%s_on.png w=%d h=%d' % (
-            sx, Y_OFF + 42, key, "left" if "prev" in key else "right", "left" if "prev" in key else "right", SEL_BW, SEL_H))
+    for ti_ in range(nth):
+        for sx, key in ((1036, "pt_pg_prev"), (1212, "pt_pg_next")):
+            sd = "left" if "prev" in key else "right"
+            L.append('button cx=%d cy=%d label="" key=%s img=images/sel_%s_off_%d.png img_on=images/sel_%s_on_%d.png w=%d h=%d when=theme:%d' % (
+                sx, Y_OFF + 42, key, sd, ti_, sd, ti_, SEL_BW, SEL_H, ti_))
     TILE = 'tsize=24 tweight=semibold talign=left tx=22'
     for ti_ in range(nth):
         tl = TILE + " tcolor=%s when=theme:%d" % (panel_draw.THEMES[ti_].get("tx", "f4f7fb"), ti_)
@@ -845,6 +868,9 @@ def main():
     for ti_, th_ in enumerate(panel_draw.THEMES):                      # the caption is live text so it can be a proper size; the plate's own ink (dark on the light skins)
         L.append('readout cx=%d cy=%d w=200 h=26 label="" key=ui_cap_theme box=0 tsize=22 tweight=semibold tcolor=%02x%02x%02x talign=left tpad=0 when=theme:%d' % (
             60 + 100, Y_OFF + 18, th_["ink"][0], th_["ink"][1], th_["ink"][2], ti_))
+    for ti_, th_ in enumerate(panel_draw.THEMES):                      # the project tempo (read only; it drives LFO SYNC), top right, caption above the value
+        L.append('text cx=%d cy=%d label="BPM" size=1.25 color=%02x%02x%02x when=theme:%d' % (1160, Y_OFF + 18, th_["ink"][0], th_["ink"][1], th_["ink"][2], ti_))
+        L.append('readout cx=%d cy=%d w=160 h=40 label="" key=tempo_text box=0 tsize=34 tweight=semibold tcolor=%s talign=center tpad=0 when=theme:%d' % (1160, Y_OFF + 54, th_["val"], ti_))
     L.append('popup cx=190 cy=%d w=260 h=44 label="" key=theme field=none img=images/popup_list.png accent=f2f6fb' % (Y_OFF + 56))      # the colour theme (a drop-down): swaps every page's pictures
     L.append('qlinks "SETTINGS" = ' + ",".join(k for k, _ in MORE_KNOBS))
 

@@ -40,9 +40,9 @@ THEMES = [
     # accent line under every section title; div_d / div_l = the dividers' shade and light edge; logo; well = (glass tint, alpha, gloss, rim) of the display
     # windows; disp / dim / cap = display text, quiet display text and display captions; glass = the BROWSE tiles' dark glass; acc = the BROWSE accent
     # (selected tile, card edge, glow); bink = BROWSE card titles; val = a live value on the SETTINGS panels.
-    dict(key="ocean", name="Ocean", base=(24, 66, 112), base2=(8, 24, 50), noise=0.7, ink=(224, 238, 252), rule=(70, 196, 255), div_d=(4, 12, 28), div_l=(64, 116, 168),
-         logo=(228, 242, 254), well=((6, 18, 38), 225, 26, (0, 0, 0)), disp="86e6ff", dim="52aed0", cap="aad8f0",
-         glass=(8, 24, 44), acc=(70, 196, 255), bink="dff4ff", val="86e6ff"),
+    dict(key="ocean", name="Ocean", base=(24, 66, 112), base2=(8, 24, 50), noise=0.7, ink=(224, 238, 252), rule=(232, 52, 58), div_d=(4, 12, 28), div_l=(64, 116, 168),
+         logo=(228, 242, 254), well=((8, 14, 30), 228, 26, (0, 0, 0)), disp="ffd84a", dim="c9a22c", cap="e6c76a",
+         glass=(8, 22, 44), acc=(236, 60, 60), bink="ffd84a", val="ffd84a", tx="ffe27a"),
     dict(key="violet", name="Violet", base=(84, 48, 134), base2=(30, 16, 62), noise=0.7, ink=(240, 232, 254), rule=(196, 118, 255), div_d=(14, 8, 30), div_l=(128, 96, 180),
          logo=(244, 236, 255), well=((22, 11, 40), 225, 26, (0, 0, 0)), disp="e4b0ff", dim="aa7cda", cap="d0b8f0",
          glass=(24, 13, 44), acc=(196, 118, 255), bink="f0e2ff", val="e4b0ff"),
@@ -51,10 +51,10 @@ THEMES = [
          glass=(24, 24, 27), acc=(230, 52, 44), bink="ff5a4e", val="ff4a3e", tx="ff5a4e", lift=20, glowk=0.15),
     dict(key="tangerine", name="Tangerine", base=(232, 126, 44), base2=(176, 66, 22), noise=0.6, ink=(40, 20, 12), rule=(255, 234, 190), div_d=(122, 52, 16), div_l=(255, 176, 104),
          logo=(42, 22, 12), well=((30, 15, 8), 235, 22, (0, 0, 0)), disp="ffc66e", dim="cc8a3c", cap="ffe4ba",
-         glass=(38, 19, 10), acc=(255, 190, 96), bink="ffe9c8", val="2a140a"),
+         glass=(38, 19, 10), acc=(255, 190, 96), bink="ffe9c8", val="2a140a", bpm="2e1608", bpmcap="6a3414"),
     dict(key="jade", name="Jade", base=(184, 220, 206), base2=(126, 174, 160), noise=0.5, ink=(18, 52, 46), rule=(228, 96, 72), div_d=(62, 102, 92), div_l=(220, 244, 234),
          logo=(20, 58, 50), well=((14, 34, 30), 235, 22, (0, 0, 0)), disp="92f2ca", dim="56bc96", cap="c2f0de",
-         glass=(14, 34, 30), acc=(120, 242, 198), bink="d8fbee", val="13322c"),
+         glass=(14, 34, 30), acc=(120, 242, 198), bink="d8fbee", val="13322c", bpm="13322c", bpmcap="3c6a5c"),
 ]
 CUR = dict(THEMES[0])                          # the theme being drawn
 
@@ -280,10 +280,12 @@ def draw(page, theme, bg, base_rgb, logo_mask, sel_groups, sel_dw, sel_bw, sel_g
     # ---- the top strip: logo, BANK / PATCH displays, BPM display (on every page)
     bg.alpha_composite(logo, (160 - logo.width // 2, 8))
     d = ImageDraw.Draw(bg)
-    for (x0, _k) in sel_groups:
-        dx = x0 + sel_bw + sel_gap
-        _well(bg, dx, sel_y0, dx + sel_dw, sel_y0 + sel_h)
-    _well(bg, *tempo_box)
+    for (x0, _k) in sel_groups:                       # one display per group, the two arrows live inside its ends, split off by hairlines
+        gw = sel_bw * 2 + sel_gap * 2 + sel_dw
+        _well(bg, x0, sel_y0, x0 + gw, sel_y0 + sel_h)
+        d = ImageDraw.Draw(bg)
+        for lx in (x0 + sel_bw, x0 + gw - sel_bw):
+            d.line([lx, sel_y0 + 12, lx, sel_y0 + sel_h - 12], fill=tuple(CUR["rule"]) + (110,), width=1)
     d = ImageDraw.Draw(bg)
 
     def col(blocks):
