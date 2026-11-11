@@ -55,7 +55,7 @@ for name, src in zip(tabs[0::2], tabs[1::2]):
             cols_, rows_, th_, gap_ = int(kv(l, "cols")), int(kv(l, "rows")), int(kv(l, "th")), int(kv(l, "gap"))
             tw_ = (w0 - (cols_ - 1) * gap_) // cols_
             off, on = img(kv(l, "img")), img(kv(l, "img_on"))
-            names = (["Moby Pixel", "CC0 Keys", "CC0 Bass+Lead", "CC0 Pads+FX"] if kv(l, "key") == "bk" else
+            names = (["Moby Pixel", "Keys", "Bass+Lead", "Pads+FX"] if kv(l, "key") == "bk" else
                      ["Acoustic Pia..", "An Ocean Swift", "CP Seventy", "E. Piano 2", "Everything", "Harpkies", "Harpsi", "Harpsichord",
                       "It's an OB-X!", "J60 Neon Main", "J60 Neon PW 1", "MelloWow", "OB Piano", "OBX Clavinet", "Smoothful", "Subtle",
                       "Sweet Spot", "Twindlin'", "J60 PWM Pluck", "J60 Saw Pluck", "Pizzi", "Simple Saw P..", "Glockenspiel", "Tubular Bells"])
@@ -119,9 +119,9 @@ for name, src in zip(tabs[0::2], tabs[1::2]):
         elif t == "readout" and f:
             k = kv(l, "key")
             if k in ("bank_name", "patch_name"):
-                dr.text((cx - int(kv(l, "w")) // 2 + 6, cy - 13), "CC0 Keys" if k == "bank_name" else "E. Piano 2", font=f, fill=col)
+                dr.text((cx - int(kv(l, "w")) // 2 + 6, cy - 13), "Keys" if k == "bank_name" else "E. Piano 2", font=f, fill=col)
             if k in ("br_bank", "br_patch"):
-                txt = ("CC0 Keys" if k == "br_bank" else "E. Piano 2") if not LOADER or LOADER == "open" else (
+                txt = ("Keys" if k == "br_bank" else "E. Piano 2") if not LOADER or LOADER == "open" else (
                     ("LOAD BANK" if LOADER == "bank" else "LOAD PRESET") if k == "br_bank" else "/sdcard/Downloads")
                 dr.text((cx - int(kv(l, "w")) // 2 + 6, cy - 13), txt, font=f, fill=col)
             if k in ("br_bank_cap", "br_patch_cap"):

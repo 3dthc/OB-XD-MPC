@@ -17,6 +17,14 @@ static void ck(bool c, const char *what, const std::string &got) { printf("%s %s
 static std::string tile(const char *pre, int n, const char *suf = "") { char k[32]; snprintf(k, 32, "%s%d%s", pre, n, suf); return get(k); }
 static int lit(const char *pre, int count) { int c = 0; for (int i = 1; i <= count; i++) if (tile(pre, i, "_on") == "1") c++; return c; }
 
+// the BROWSE bank list shows 8 banks a page; the bank knob moves between pages
+static int find_bank(const char *name) {
+    int found = 0;
+    usleep(2300000);                                  // past the window in which a reload's browse-knob values are ignored
+    for (int pg = 0; pg < 3 && !found; pg++) { char v[8]; snprintf(v, 8, "%d", pg * 8 + 1); set("bk_scroll", v); for (int i = 1; i <= 8; i++) if (tile("bk_", i) == name) found = pg * 8 + i; }
+    set("bk_scroll", "1");
+    return found;
+}
 static int tap_text(const char *pre, int count, const std::string &t) { for (int i = 1; i <= count; i++) if (tile(pre, i) == t) { char k[32]; snprintf(k, 32, "%s%d", pre, i); usleep(300000); set(k, "1"); set(k, "0"); return i; } return 0; }   // a finger's pace: the engine ignores the same tile again within TAP_MS
 static void write_fxp(const std::string &path, const std::string &name) {
     std::string xml = "<discoDSP Val_0=\"0.5\" voiceCount=\"8\" programName=\"" + name + "\"/>";
@@ -30,7 +38,7 @@ int main(int argc, char **argv) {
     E = mpc_engine(); P = E->create(argv[1]);
     usleep(2200000);   // past the window in which a reload's browse-knob / LOAD values are ignored (create, set_state)
     std::string b0 = get("bank_name"), p0 = get("patch_name");
-    ck(tile("bk_", 1) != " " && tile("bk_", 2) != " " && tile("bk_", 5) == " ", "bank list: rows 1..4 named, row 5 blank", tile("bk_", 1) + " | " + tile("bk_", 2));
+    ck(tile("bk_", 1) != " " && tile("bk_", 2) != " " && tile("bk_", 7) != " " && tile("bk_", 8) == " ", "bank list: rows 1..7 named, row 8 blank", tile("bk_", 1) + " | " + tile("bk_", 2));
     ck(lit("bk_", 7) == 1 && tile("bk_", 1, "_on") == "1", "first bank lit at start", "");
     ck(tile("pt_", 1) == p0 || tile("pt_", 1) != " ", "patch grid has names", tile("pt_", 1) + ", " + tile("pt_", 2));
     ck(lit("pt_", 24) == 1, "one patch lit (the playing one)", "");
@@ -128,10 +136,10 @@ int main(int argc, char **argv) {
     ck(exists(plug + "/../my-banks/presets/Test One.fxp"), "...and copied into my-banks/presets", "");
     set("load_mode", "0");
     ck(get("br_patch") == "Test One" && get("br_patch_title") == "PATCHES", "back to patches", get("br_patch"));
-    int fb = 0; for (int i = 1; i <= 8; i++) if (tile("bk_", i) == "Friends Bank") fb = i;
+    int fb = find_bank("Friends Bank");
     ck(fb > 0, "the new bank is in the bank list", std::to_string(fb));
     E->destroy(P); P = E->create(argv[1]);                                     // a restart: everything is still there
-    int fb2 = 0, mp = 0; for (int i = 1; i <= 8; i++) { if (tile("bk_", i) == "Friends Bank") fb2 = i; if (tile("bk_", i) == "My Presets") mp = i; }
+    int fb2 = find_bank("Friends Bank"), mp = find_bank("My Presets");
     ck(fb2 > 0 && mp > 0, "after a restart both are still there", std::to_string(fb2) + "," + std::to_string(mp));
     { int r0 = atoi(get("display_rev").c_str()); set("stop", "1"); int r1 = atoi(get("display_rev").c_str()); set("stop", "0"); int r2 = atoi(get("display_rev").c_str());
       ck(r1 > r0 && r2 == r1 && get("stop") == "0", "STOP press asks for a redraw (the light goes out), release does not", std::to_string(r0) + "," + std::to_string(r1) + "," + std::to_string(r2)); }
@@ -166,6 +174,10 @@ int main(int argc, char **argv) {
     usleep(2200000);
     set("bk_scroll", "1"); set("pt_scroll", "2");
     ck(get("patch_name") != spn, "a moment later the patch knob plays again", get("patch_name"));
+    { std::string old = st; size_t q = old.find("bank=010 - Keys"); bool had = q != std::string::npos;          // a project saved before the "CC0" was dropped
+      if (had) old.insert(q + 10, "CC0 ");
+      E->destroy(P); P = E->create(argv[1]); set("state", old.c_str());
+      ck(had && get("bank_name") == sbn && get("patch_name") == spn, "a project saved with the old \"CC0 Keys\" bank name still recalls its patch", get("bank_name") + " / " + get("patch_name")); }
     printf("%s\n", fails ? "FAILED" : "PASSED");
     return fails ? 1 : 0;
 }

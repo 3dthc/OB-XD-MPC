@@ -71,7 +71,7 @@ output out of public releases.
 
 ## More banks (optional, for your own device)
 
-The release ships the Moby Pixel bank (GPL) and three banks of CC0 patches converted from OB-Xf's factory set (79 patches, credits in `banks/CREDITS-CC0.md`). OB-Xd's own factory banks belong to discoDSP and their authors, so they are not included. If you
+The release ships the Moby Pixel bank (GPL) and six banks of patches converted from OB-Xf's CC0 factory set (about 390 patches in the style of OB-Xd's own factory sounds, credits in `banks/CREDITS.md`; banks 013-015 use a few OB-Xf features OB-Xd lacks, so they are close to the originals rather than exact). OB-Xd's own factory banks belong to discoDSP and their authors, so they are not included. If you
 have OB-Xd installed (it is free from discoDSP), copy its `.fxb` files into a `my-banks` folder next to the plugin's `banks` folder on the MPC (create it; the plugin reads both):
 
     /sdcard/Synths/sd88me - VST - OB-Xd/my-banks/
@@ -84,4 +84,4 @@ your own device, in `dist-private/`).
 
 Code: GPL v3 (see `LICENSE`). Anyone you give a built plugin to is entitled to this source, so link to this repository wherever you share
 binaries. The skin artwork (`skin-source/`, `vst/images/`) is gitterdude's community theme under CC BY-SA 3.0, see `skin-source/NOTICE.md`.
-The Moby bank (`banks/`) is from the GPL community repository, see `banks/NOTICE.md`; the CC0 banks are credited in `banks/CREDITS-CC0.md`. Everything else, with who wrote it: [CREDITS.md](CREDITS.md).
+The Moby bank (`banks/`) is from the GPL community repository, see `banks/NOTICE.md`; the converted banks are credited in `banks/CREDITS.md`. Everything else, with who wrote it: [CREDITS.md](CREDITS.md).

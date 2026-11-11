@@ -31,11 +31,14 @@ echo "== public zip (cleared banks only) =="
 # The public zip is built from a staging folder holding ONLY the cleared banks and their notices, copied by exact name.
 # Nothing else in banks/ (or anywhere else) can get in, and every bank is checked against the SHA-256 listed here.
 #   Moby Pixel Bank: GPL community repository (see banks/NOTICE.md)
-#   CC0 Keys / Bass+Lead / Pads+FX: converted from OB-Xf's CC0 / public-domain patches (see banks/CREDITS-CC0.md)
+#   Keys / Bass+Lead / Pads+FX (and the "2" banks, approximate conversions): converted from OB-Xf's CC0 / public-domain patches (see banks/CREDITS.md)
 CLEARED="29cf57db9de19f257297c80bd3ccb7a4c1b142a0764a75a7844bd6d2338c68e8  000 - Moby Pixel.fxb
-5d27f97dce2b63682a68f462f4666349535cd51c548c218cee32e34c998b8995  010 - CC0 Keys.fxb
-c66035aed9d5aa77b0a8bda52708e0049b2145ec52075d20d733e122740bd9fa  011 - CC0 Bass+Lead.fxb
-4aff0750d54e7f187793b1dcf93699bb8e0c01868da3d7eec718ca4f304d5f30  012 - CC0 Pads+FX.fxb"
+5d27f97dce2b63682a68f462f4666349535cd51c548c218cee32e34c998b8995  010 - Keys.fxb
+c66035aed9d5aa77b0a8bda52708e0049b2145ec52075d20d733e122740bd9fa  011 - Bass+Lead.fxb
+4aff0750d54e7f187793b1dcf93699bb8e0c01868da3d7eec718ca4f304d5f30  012 - Pads+FX.fxb
+b667b258b12246a44e17667d4f31c3d9907bf37fae2774c132760815ddc5eb9c  013 - Keys 2.fxb
+e24fc305309a04316dbd8c03fac9210cd96b403f3bdcd10b4aa628ed02ad6d82  014 - Bass+Lead 2.fxb
+fd6f4396202c24d2e2677558f60545e02b0c6bc0efd689625cb8f72f8ec046bb  015 - Pads+FX 2.fxb"
 PUB="$(mktemp -d)"
 NAMES=""
 while IFS= read -r line; do
@@ -48,9 +51,9 @@ while IFS= read -r line; do
 done <<EOF
 $CLEARED
 EOF
-cp banks/NOTICE.md banks/CREDITS-CC0.md "$PUB/"
+cp banks/NOTICE.md banks/CREDITS.md "$PUB/"
 EXTRA=$(find banks -maxdepth 1 -type f ! -name '*.md' | wc -l)
-[ "$EXTRA" = "4" ] || echo "note: $((EXTRA - 4)) other file(s) in banks/ are ignored for the public zip"
+[ "$EXTRA" = "7" ] || echo "note: $((EXTRA - 7)) other file(s) in banks/ are ignored for the public zip"
 package dist-public "$PUB"
 rm -rf "$PUB"
 Z="dist-public/OB-Xd-$VERSION-mpc-armv7.zip"

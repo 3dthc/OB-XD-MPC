@@ -396,6 +396,13 @@ void set_state(Inst *s, const char *val) {
     }
     int b = -1;
     for (int i = 0; i < (int)s->banks.size() && b < 0; i++) if (bank_id(s->banks[i]) == bank_file) b = i;
+    if (b < 0) {                                  // projects saved before 0.4.6 call the converted banks "010 - CC0 Keys.fxb" etc.
+        size_t c = bank_file.find("CC0 ");
+        if (c != std::string::npos) {
+            std::string now = bank_file.substr(0, c) + bank_file.substr(c + 4);
+            for (int i = 0; i < (int)s->banks.size() && b < 0; i++) if (bank_id(s->banks[i]) == now) b = i;
+        }
+    }
     if (b >= 0) {
         select_bank(s, b);
         int idx = -1;

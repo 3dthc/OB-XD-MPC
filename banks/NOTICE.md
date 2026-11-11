@@ -5,4 +5,4 @@ The plugin reads every `.fxb` in this folder (on the device, `<plugin folder>/ba
 
 (The file contents are unmodified; only the file name was shortened so it fits the on-screen display.)
 
-`010 - CC0 Keys.fxb`, `011 - CC0 Bass+Lead.fxb` and `012 - CC0 Pads+FX.fxb` hold patches from OB-Xf's factory set, each marked CC0 / Public Domain in its own file, converted by `tools/convert_obxf_patches.py`. See `CREDITS-CC0.md`.
+`010 - Keys.fxb` to `015 - Pads+FX 2.fxb` hold patches from OB-Xf's factory set, each marked CC0 / Public Domain in its own file, converted by `tools/convert_obxf_patches.py`. See `CREDITS.md`.
