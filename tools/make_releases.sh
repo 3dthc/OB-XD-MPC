@@ -7,12 +7,12 @@
 #
 # The banks are plain files in the plugin's "banks" folder, so the two zips hold the same plugin. You can also skip the private zip
 # and just copy .fxb files into <plugin folder>/my-banks/ on the MPC (kept on upgrade; banks/ is replaced by every install).
-# Environment: MPC_VST (default ~/mpc-vst-plugins), OWNER (default 3dthc), VERSION (default 0.3.0)
+# Environment: MPC_VST (default ~/mpc-vst-plugins), OWNER (default 3dthc), VERSION (default 0.4.6)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export MPC_VST="${MPC_VST:-$HOME/mpc-vst-plugins}"
 OWNER="${OWNER:-3dthc}"
-VERSION="${VERSION:-0.3.0}"
+VERSION="${VERSION:-0.4.6}"
 BANKS="${1:-}"
 ABOUT="OB-Xd virtual analog polysynth (unofficial port)."
 SKIN="vst/build/skin/sd88me - VST - OB-Xd"
