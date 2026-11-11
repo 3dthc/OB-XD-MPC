@@ -406,6 +406,7 @@ void set_state(Inst *s, const char *val) {
     if (b >= 0) {
         select_bank(s, b);
         int idx = -1;
+        if (patch >= 0 && patch < (int)s->patches.size() && s->patches[patch].name == patch_name) idx = patch;   // same name twice in a bank: the saved slot wins
         for (int i = 0; i < (int)s->patches.size() && idx < 0; i++) if (s->patches[i].name == patch_name) idx = i;
         load_patch(s, idx >= 0 ? idx : patch);
     } else if (bank_index >= 0 && bank_index < (int)s->banks.size() && bank_file.empty()) {

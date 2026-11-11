@@ -178,6 +178,10 @@ int main(int argc, char **argv) {
       if (had) old.insert(q + 10, "CC0 ");
       E->destroy(P); P = E->create(argv[1]); set("state", old.c_str());
       ck(had && get("bank_name") == sbn && get("patch_name") == spn, "a project saved with the old \"CC0 Keys\" bank name still recalls its patch", get("bank_name") + " / " + get("patch_name")); }
+    { E->destroy(P); P = E->create(argv[1]); set("bank", "5"); set("patch", "2");                              // "Keys 2": slots 1 and 2 are both "Accordion 1"
+      std::string n2 = get("patch_name"); char st2[8192] = ""; E->get_param(P, "state", st2, sizeof st2);
+      set("patch", "1"); set("state", st2);
+      ck(get("patch") == "2" && get("patch_name") == n2, "two patches with one name: the saved slot is restored", get("patch") + " / " + get("patch_name")); }
     printf("%s\n", fails ? "FAILED" : "PASSED");
     return fails ? 1 : 0;
 }
