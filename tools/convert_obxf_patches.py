@@ -264,7 +264,8 @@ def main():
         if v is None:
             skipped[f] = why2
             continue
-        approx.append(row + (v,))
+        base = os.path.basename(f)[:-4]                       # OB-Xf's accordion / rotary organ files are numbered differently inside than by file name,
+        approx.append((row[0], base, row[2], v))              # so two patches end up with one name: the file name is the unique one
     os.makedirs(out, exist_ok=True)
     credits = ["# Factory-style patches: who made them\n",
                "These patches come from the factory patch set of [OB-Xf](https://github.com/surge-synthesizer/OB-Xf) (Surge Synth Team), where every one is marked "

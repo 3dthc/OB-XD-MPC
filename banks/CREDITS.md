@@ -102,11 +102,11 @@ Banks 010-012 are exact conversions. Banks 013-015 (the ones ending in "2") use 
 | Patch | Author | Category |
 |---|---|---|
 | Accordion 1 | John Valentine | Keys |
-| Accordion 1 | Aleksey Zhehanov | Keys |
 | Accordion 2 | Aleksey Zhehanov | Keys |
 | Accordion 3 | Aleksey Zhehanov | Keys |
 | Accordion 4 | Aleksey Zhehanov | Keys |
 | Accordion 5 | Aleksey Zhehanov | Keys |
+| Accordion 6 | Aleksey Zhehanov | Keys |
 | Acoustic Piano 1 | Aleksey Zhehanov | Keys |
 | Acoustic Piano 2 | Aleksey Zhehanov | Keys |
 | Almondo | Saif Sameer | Keys |
@@ -121,9 +121,9 @@ Banks 010-012 are exact conversions. Banks 013-015 (the ones ending in "2") use 
 | E. Piano 4 | Aleksey Zhehanov | Keys |
 | E. Piano 4 Chorus | Aleksey Zhehanov | Keys |
 | E. Piano 4 Tremolo | Aleksey Zhehanov | Keys |
+| E. Piano 5 | Aleksey Zhehanov | Keys |
 | Early Piano | Fedir Tkachov | Keys |
 | Elarisin | Saif Sameer | Keys |
-| Electric Piano 3 | Aleksey Zhehanov | Keys |
 | Elegant EP | Saif Sameer | Keys |
 | Evolution Arp | Pebblestream | Keys |
 | Formant Reeds | Jacky Ligon | Keys |
@@ -197,11 +197,11 @@ Banks 010-012 are exact conversions. Banks 013-015 (the ones ending in "2") use 
 | Jazz Guitar | Aleksey Zhehanov | Guitars |
 | Nylon String Guitar | Aleksey Zhehanov | Guitars |
 | Overdrive Guitar | Aleksey Zhehanov | Guitars |
-| Power Chord | Aleksey Zhehanov | Guitars |
+| Power Chord 1 | Aleksey Zhehanov | Guitars |
 | Power Chord 2 | Aleksey Zhehanov | Guitars |
-| Power Chord Muted | Aleksey Zhehanov | Guitars |
+| Power Chord Muted 1 | Aleksey Zhehanov | Guitars |
 | Power Chord Muted 2 | Aleksey Zhehanov | Guitars |
-| Steel String Guitar | Aleksey Zhehanov | Guitars |
+| Steel String Guitar 1 | Aleksey Zhehanov | Guitars |
 | Steel String Guitar DT | Aleksey Zhehanov | Guitars |
 | Carborgen | Saif Sameer | Organs |
 | Church Organ | Aleksey Zhehanov | Organs |
@@ -216,7 +216,7 @@ Banks 010-012 are exact conversions. Banks 013-015 (the ones ending in "2") use 
 | Percussive Organ 2 | Aleksey Zhehanov | Organs |
 | Rocker | Saif Sameer | Organs |
 | Rotary Organ 2 | Aleksey Zhehanov | Organs |
-| Rotary Organ 2 | Aleksey Zhehanov | Organs |
+| Rotary Organ 3 | Aleksey Zhehanov | Organs |
 | Tonewheels | Vincent Zauhar | Organs |
 | Transistorg | Saif Sameer | Organs |
 | Wrong Organ | Ocean Swift | Organs |
