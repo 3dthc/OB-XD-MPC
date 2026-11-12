@@ -5,7 +5,7 @@ A native ARM VST2 build of the OB-Xd synthesizer for first-generation Akai MPC /
 
 **Unofficial:** not affiliated with or endorsed by discoDSP, 2Dat, Akai or the community OB-Xd project. See [CREDITS.md](CREDITS.md).
 
-![The four themes: Slate, MPC Grey, MPC Black, Retro (OSC page)](docs/screenshots/obxd-themes.png)
+![The five themes: Ocean, Violet, MPC Black, Tangerine, Jade (OSC page)](docs/screenshots/obxd-themes.png)
 ![OSC page (render with sample names)](docs/screenshots/obxd.png)
 ![FILTER page](docs/screenshots/obxd-filter.png)
 ![BROWSE page](docs/screenshots/obxd-browse.png)
@@ -17,10 +17,12 @@ A native ARM VST2 build of the OB-Xd synthesizer for first-generation Akai MPC /
   knobs and buttons for fingers (tabs at the top): **OSC** (master, global, oscillators, mixer, control, amp envelope), **FILTER**
   (filter, filter envelope, modulation, voice variation) and **SETTINGS** for the controls the panel has no place for.
   BANK, PATCH and BPM are on the OSC and FILTER pages.
-- **THEME** (a drop-down in the top left of the SETTINGS page, touch only): four looks, switched live. **Slate** (default), **MPC Grey** (classic MPC grey with
-  green LCD displays), **MPC Black** (MPC1000-style black with amber displays) and **Retro** (cream with orange LED displays). The BANK / PATCH / BPM
-  displays, legato and voices readouts change colour with it.  Saved as a normal parameter at the end of the list,
-  so older projects load unchanged.
+- **THEME** (a drop-down in the top left of the SETTINGS page, touch only): five looks, switched live. **Ocean** (default, deep blue with red accent lines and yellow glowing displays),
+  **Violet** (deep purple with lilac displays), **MPC Black** (black with red displays), **Tangerine** (orange with amber displays on smoked glass) and
+  **Jade** (light seafoam with mint displays). The BANK / PATCH displays, legato and voices readouts, and the BROWSE page change with it. The BANK / PATCH arrows are thin chevrons inside
+  their displays; the project tempo (BPM) is shown at the top right of SETTINGS.
+  Saved as a normal parameter at the end of the list, so older projects load unchanged (the old Slate, MPC Grey and Retro slots now show Ocean,
+  Violet and Tangerine).
 - **FREQUENCY (Hz):** reference pitch, 400 to 480 Hz (default 440), on the SETTINGS page. It sits on top of TUNE and is not stored in presets.
 - **STOP:** a panic button (all notes and sound off) next to VAM. LEARN, CLEAR and MENU are removed (no MIDI learn on the MPC).
 - **BANK / PATCH selector** at the top centre of the OSC and FILTER pages, each with a left and a right arrow (right = next, left = previous, they wrap around). Banks are plain OB-Xd `.fxb` files in the `banks` folder next to the plugin; the release ships the Moby Pixel bank and three banks of CC0 (public domain) patches. Your own banks go in a `my-banks` folder next to `banks`; `banks` itself is replaced on every install, so it only ever holds what the release ships.
@@ -69,7 +71,7 @@ output out of public releases.
 
 ## More banks (optional, for your own device)
 
-The release ships the Moby Pixel bank (GPL) and three banks of CC0 patches converted from OB-Xf's factory set (79 patches, credits in `banks/CREDITS-CC0.md`). OB-Xd's own factory banks belong to discoDSP and their authors, so they are not included. If you
+The release ships the Moby Pixel bank (GPL) a bank of 35 patches written for this plugin (`018 - Classics`: brass stabs and swells, string machines, PWM pads, acid and sub basses, sync and glide leads, short arp-friendly plucks, effects) and eight banks of patches converted from OB-Xf's CC0 factory set (about 490 patches in the style of OB-Xd's own factory sounds, credits in `banks/CREDITS.md`; banks 013-017 use a few OB-Xf features OB-Xd lacks, so they are close to the originals rather than exact). OB-Xd's own factory banks belong to discoDSP and their authors, so they are not included. If you
 have OB-Xd installed (it is free from discoDSP), copy its `.fxb` files into a `my-banks` folder next to the plugin's `banks` folder on the MPC (create it; the plugin reads both):
 
     /sdcard/Synths/sd88me - VST - OB-Xd/my-banks/
@@ -82,4 +84,4 @@ your own device, in `dist-private/`).
 
 Code: GPL v3 (see `LICENSE`). Anyone you give a built plugin to is entitled to this source, so link to this repository wherever you share
 binaries. The skin artwork (`skin-source/`, `vst/images/`) is gitterdude's community theme under CC BY-SA 3.0, see `skin-source/NOTICE.md`.
-The Moby bank (`banks/`) is from the GPL community repository, see `banks/NOTICE.md`; the CC0 banks are credited in `banks/CREDITS-CC0.md`. Everything else, with who wrote it: [CREDITS.md](CREDITS.md).
+The Moby bank (`banks/`) is from the GPL community repository, see `banks/NOTICE.md`; the converted banks are credited in `banks/CREDITS.md`. Everything else, with who wrote it: [CREDITS.md](CREDITS.md).

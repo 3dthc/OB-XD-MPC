@@ -8,6 +8,8 @@
 #include <string.h>
 #include <dirent.h>
 #include <sys/stat.h>
+#include <time.h>
+#include <map>
 extern "C" {
 #include "engine.h"
 }
@@ -28,6 +30,7 @@ struct Inst {
     int theme = 0;                           // the panel's colour theme (the THEME option on the MORE page); the skin swaps pictures, the engine just remembers it
     double bpm = 0;                          // host tempo ("lfo_bpm"; 0 = not told yet, 120 is used)
     double secs = 0;                         // seconds since the transport last started (free-running when stopped)
+    double quiet_until = 0;                  // wall clock: until then a project's values for the browse knob / LOAD menu are ignored
     int rev = 1;                             // bumped when a bank or patch loads, so the wrapper redraws every control
     // The BROWSE page: a bank list and a patch grid. It looks at one bank (bb) and one page of its patches (ppage) without
     // loading anything; only a patch tap or the patch knob changes the sound.
@@ -42,8 +45,27 @@ struct Inst {
     std::vector<FEnt> ents;
     int fpage = 0;
     std::vector<std::pair<std::string, std::string> > roots;   // label, path
+    // One touch of a button reaches us as two sets, and a redraw makes the host report the button's value back on
+    // top of that, so a step taken on every set above 0.5 is taken two or three times. Each button remembers when
+    // it last acted; anything within TAP_MS of that is the same touch.
+    std::map<std::string, double> tap_at;
 };
 static const int BK_TILES = 8, PT_TILES = 24;       // tiles on the BROWSE page: bank rows, patch grid cells
+static const double TAP_MS = 250;
+
+static double now_ms() {
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return t.tv_sec * 1000.0 + t.tv_nsec / 1000000.0;
+}
+/* True once per touch of `key`. Buttons only: a knob's every value matters, a button's repeats do not. */
+static bool tap_once(Inst *s, const char *key) {
+    double t = now_ms();
+    std::map<std::string, double>::iterator it = s->tap_at.find(key);
+    if (it != s->tap_at.end() && t - it->second < TAP_MS) return false;
+    s->tap_at[key] = t;
+    return true;
+}
 
 // The panel shows voice count (8 digits) and legato mode (4 labels) as pictures: snap the engine to the same
 // step the picture shows, so what is displayed is what plays.
@@ -313,6 +335,108 @@ void fb_tap(Inst *s, int k) {                                            // tile
 }
 
 
+// Project state: what the wrapper stores in a saved project and hands back on load (effGetChunk/effSetChunk, the "state" key).
+// One "key=value" per line, so a parameter added later leaves old projects loading. The bank goes by file name and the patch
+// by name, because indexes shift when a bank is added to my-banks; the parameter values are always restored, so edits to a
+// patch survive and the sound comes back even when its bank is gone.
+// (Written from dylan-travis's patch on issue #1.)
+static const char *STATE_MAGIC = "obxd-state 1";
+
+std::string bank_id(const obxdbank::BankFile &b) {
+    size_t k = b.path.find_last_of('/');
+    return k == std::string::npos ? b.path : b.path.substr(k + 1);
+}
+
+int get_state(Inst *s, char *buf, int n) {
+    std::string o = STATE_MAGIC;
+    char line[96];
+    if (!s->banks.empty()) o += "\nbank=" + bank_id(s->banks[s->bank]);
+    if (!s->patches.empty()) {
+        o += "\npatch_name=" + s->patches[s->patch].name;
+        snprintf(line, sizeof line, "\npatch=%d", s->patch);
+        o += line;
+    }
+    snprintf(line, sizeof line, "\nbank_index=%d\nmaster_hz=%.9g\ntheme=%d", s->bank, s->hz, s->theme);
+    o += line;
+    for (int i = 0; i < kObxdParamCount; i++) {
+        snprintf(line, sizeof line, "\n%s=%.9g", kObxdParams[i].key, s->vals[kObxdParams[i].id]);
+        o += line;
+    }
+    if ((int)o.size() >= n) return -1;                     // no partial state: a cut-off one would restore half a patch
+    memcpy(buf, o.c_str(), o.size() + 1);
+    return (int)o.size();
+}
+
+static double wall_s() {
+    struct timespec t;
+    clock_gettime(CLOCK_MONOTONIC, &t);
+    return (double)t.tv_sec + t.tv_nsec / 1e9;
+}
+static const double QUIET_S = 2.0;   // after opening or a state restore, see set_param's pt_scroll / load_mode
+
+void set_state(Inst *s, const char *val) {
+    std::string in = val;
+    if (in.compare(0, strlen(STATE_MAGIC), STATE_MAGIC)) return;
+    std::vector<std::pair<std::string, std::string> > kv;
+    std::string bank_file, patch_name;
+    int bank_index = -1, patch = -1;
+    size_t at = in.find('\n');
+    while (at != std::string::npos) {
+        size_t next = in.find('\n', at + 1);
+        std::string l = in.substr(at + 1, next == std::string::npos ? std::string::npos : next - at - 1);
+        at = next;
+        size_t eq = l.find('=');
+        if (eq == std::string::npos) continue;
+        std::string k = l.substr(0, eq), v = l.substr(eq + 1);
+        if (k == "bank") bank_file = v;
+        else if (k == "patch_name") patch_name = v;
+        else if (k == "bank_index") bank_index = atoi(v.c_str());
+        else if (k == "patch") patch = atoi(v.c_str());
+        else kv.push_back(std::make_pair(k, v));
+    }
+    int b = -1;
+    for (int i = 0; i < (int)s->banks.size() && b < 0; i++) if (bank_id(s->banks[i]) == bank_file) b = i;
+    if (b < 0) {                                  // projects saved before 0.4.7 call the converted banks "010 - CC0 Keys.fxb" etc.
+        size_t c = bank_file.find("CC0 ");
+        if (c != std::string::npos) {
+            std::string now = bank_file.substr(0, c) + bank_file.substr(c + 4);
+            for (int i = 0; i < (int)s->banks.size() && b < 0; i++) if (bank_id(s->banks[i]) == now) b = i;
+        }
+    }
+    if (b >= 0) {
+        select_bank(s, b);
+        int idx = -1;
+        if (patch >= 0 && patch < (int)s->patches.size() && s->patches[patch].name == patch_name) idx = patch;   // same name twice in a bank: the saved slot wins
+        for (int i = 0; i < (int)s->patches.size() && idx < 0; i++) if (s->patches[i].name == patch_name) idx = i;
+        load_patch(s, idx >= 0 ? idx : patch);
+    } else if (bank_index >= 0 && bank_index < (int)s->banks.size() && bank_file.empty()) {
+        select_bank(s, bank_index);
+        load_patch(s, patch);
+    }
+    for (size_t i = 0; i < kv.size(); i++) {
+        const char *k = kv[i].first.c_str(), *v = kv[i].second.c_str();
+        if (!strcmp(k, "master_hz")) {
+            float h = (float)atof(v);
+            s->hz = h < 400.f ? 400.f : (h > 480.f ? 480.f : h);
+        } else if (!strcmp(k, "theme")) {
+            int t = atoi(v);
+            s->theme = t < 0 ? 0 : (t > 4 ? 4 : t);
+        } else {
+            int f = find_key(k);
+            if (f < 0) continue;
+            float x = (float)atof(v);
+            apply(s, kObxdParams[f].id, x < 0 ? 0 : (x > 1 ? 1 : x));
+        }
+    }
+    apply_tune(s);
+    s->synth.allNotesOff();
+    s->bb = s->bank;                                       // the browser looks at the restored bank, not where it was left
+    s->ppage = s->patches.empty() ? 0 : s->patch / PT_TILES;
+    s->fmode = 0;
+    s->quiet_until = wall_s() + QUIET_S;
+    s->rev++;
+}
+
 void *create(const char *data_dir) {
     Inst *s = new Inst();
     memset(s->vals, 0, sizeof s->vals);
@@ -324,6 +448,7 @@ void *create(const char *data_dir) {
     scan_all(s);
     fb_roots(s);
     if (!s->banks.empty()) { select_bank(s, 0); load_patch(s, 0); }
+    s->quiet_until = wall_s() + QUIET_S;     // MPC puts a project's values back right after it opens the plugin
     return s;
 }
 void destroy(void *p) { delete (Inst *)p; }
@@ -348,16 +473,26 @@ void midi(void *p, const uint8_t *m, int len) {
 
 void set_param(void *p, const char *key, const char *val) {
     Inst *s = (Inst *)p;
+    if (!strcmp(key, "state")) { set_state(s, val); return; }
     if (!strcmp(key, "stop")) {                            // STOP button: panic (all notes off, all sound off)
-        if (atof(val) > 0.5) s->synth.allSoundOff();
+        if (atof(val) > 0.5) {
+            s->synth.allSoundOff();
+            s->rev++;                                      // redraw: the skin keeps the button lit until the host is told it is back at 0 (get_param "stop" is always 0)
+        }
         return;
     }
+    // A project's values for the BROWSE patch knob and the LOAD menu say where the browser was looking, not a turn or a
+    // tap: put back one by one (a project saved before 0.4.6, or the host replaying values after the state), the knob's
+    // loaded the first patch of a bank that was only being looked at, over the saved sound, and the menu's opened a file
+    // list. Just after opening or a state restore they are ignored.
+    if ((!strcmp(key, "pt_scroll") || !strcmp(key, "load_mode")) && wall_s() < s->quiet_until) return;
     if (!strcmp(key, "load_mode")) { fb_open(s, atoi(val)); return; }                                 // the LOAD drop-down: PATCHES / LOAD BANK / LOAD PRESET
     if (s->fmode && (!strcmp(key, "bk_scroll") || !strcmp(key, "pt_scroll"))) return;               // the knobs rest while a file list is up
     if (!strcmp(key, "bk_scroll")) { browse_bank(s, (int)(atof(val) + 0.5) - 1); return; }        // BROWSE bank knob: look only
     if (!strcmp(key, "pt_scroll")) { scroll_patch(s, (int)(atof(val) + 0.5) - 1); return; }      // BROWSE patch knob: plays
     if (!strncmp(key, "bk_", 3) || !strncmp(key, "pt_", 3)) {                                      // BROWSE tiles and page arrows
         if (atof(val) < 0.5) return;                                                               // a tap, not its release
+        if (!tap_once(s, key)) return;                                                             // ... and not the same tap twice
         int k = atoi(key + 3);
         if (s->fmode) {                                                                            // file list: places on the left, files on the right
             if (!strncmp(key, "bk_", 3) && k >= 1 && k <= (int)s->roots.size()) { s->cwd = s->roots[k - 1].second; s->note.clear(); fb_list(s); s->rev++; }
@@ -378,10 +513,12 @@ void set_param(void *p, const char *key, const char *val) {
         int nb = (int)s->banks.size(), np = (int)s->patches.size();
         int v = (int)(atof(val) + 0.5) - 1;                  // the controls count from 1
         if (!strcmp(key, "bank")) {
-            if (nb && v != s->bank) { select_bank(s, v); load_patch(s, 0); }
+            // MPC pokes parameter 0 (Bank here) to the far end of its range around load, save and STOP. select_bank() clamps, so
+            // that landed on the last bank and loaded its first patch over the sound. A bank that isn't there does nothing.
+            if (nb && v != s->bank && v >= 0 && v < nb) { select_bank(s, v); load_patch(s, 0); }
         } else if (!strcmp(key, "patch")) {
             if (np && v != s->patch) load_patch(s, v);
-        } else if (atof(val) > 0.5) {                       // arrows: step and wrap around
+        } else if (atof(val) > 0.5 && tap_once(s, key)) {   // arrows: one step per touch, wrapping around
             if (!strcmp(key, "bank_next") && nb) { select_bank(s, (s->bank + 1) % nb); load_patch(s, 0); }
             else if (!strcmp(key, "bank_prev") && nb) { select_bank(s, (s->bank + nb - 1) % nb); load_patch(s, 0); }
             else if (!strcmp(key, "patch_next") && np) load_patch(s, (s->patch + 1) % np);
@@ -391,7 +528,7 @@ void set_param(void *p, const char *key, const char *val) {
     }
     if (!strcmp(key, "theme")) {
         int t = atoi(val);
-        s->theme = t < 0 ? 0 : (t > 3 ? 3 : t);
+        s->theme = t < 0 ? 0 : (t > 4 ? 4 : t);
         return;
     }
     if (!strcmp(key, "lfo_bpm")) {
@@ -419,6 +556,7 @@ void set_param(void *p, const char *key, const char *val) {
 
 int get_param(void *p, const char *key, char *buf, int n) {
     Inst *s = (Inst *)p;
+    if (!strcmp(key, "state")) return get_state(s, buf, n);
     if (!strcmp(key, "master_hz")) return snprintf(buf, n, "%.1f", s->hz);
     if (!strcmp(key, "stop")) return snprintf(buf, n, "0");
     if (!strcmp(key, "theme")) return snprintf(buf, n, "%d", s->theme);

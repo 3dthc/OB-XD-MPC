@@ -56,8 +56,24 @@ def clamp(v, lo=0.0, hi=1.0):
 XD_TO_XF_SYNC = [1, 4, 5, 7, 10, 11, 13, 15, 16]      # OB-Xd's 9 LFO sync buckets -> OB-Xf's 21
 
 
-def xf_to_xd(a):
-    """OB-Xf patch attributes (dict of str -> float) -> list of 80 OB-Xd values, or (None, reason) when it can't be converted."""
+APPROX_FAIL = ("LFO2ToVolume",)
+
+
+def xf_to_xd(a, approx=False):
+    """OB-Xf patch attributes (dict of str -> float) -> list of 80 OB-Xd values, or (None, reason) when it can't be converted.
+    approx=True also takes patches that use things OB-Xd lacks, by dropping them: the xpander filter becomes OB-Xd's 4-pole low
+    pass, ring mod / noise colour / LFO 2 / LFO to volume are left out, inverted pitch and PW envelopes are left out."""
+    g0 = lambda k, d=0.0: float(a.get(k, d))
+    if approx:
+        a = dict(a)
+        if g0("Filter4PoleXpander") > 0.001:
+            a["Filter4PoleMode"] = "1"
+        for k in ("Filter4PoleXpander", "FilterXpanderMode", "NoiseColor", "LFO1ToVolume", "RingModMix", "LFO2ModAmount1",
+                  "LFO2ModAmount2", "LFO2ToVolume"):
+            a[k] = "0"
+        for k, amt in (("EnvToPitchInvert", "EnvToPitchAmount"), ("EnvToPWInvert", "EnvToPWAmount")):
+            if g0(k) > 0.001:
+                a[k], a[amt] = "0", "0"
     g = lambda k, d=0.0: float(a.get(k, d))
     for k in ("Filter4PoleXpander", "FilterXpanderMode", "NoiseColor", "LFO1ToVolume", "EnvToPitchInvert", "EnvToPWInvert",
               "RingModMix", "LFO2ToVolume", "LFO2ModAmount1", "LFO2ModAmount2"):
@@ -200,9 +216,14 @@ if os.path.exists(LEVELS_FILE) and "--no-levels" not in sys.argv:
     import json
     LEVELS = json.load(open(LEVELS_FILE))
 
-GROUPS = [("010 - CC0 Keys.fxb", ("Keys", "Plucks", "Mallets", "Bells", "Guitars", "Organs")),
-          ("011 - CC0 Bass+Lead.fxb", ("Basses", "Leads")),
-          ("012 - CC0 Pads+FX.fxb", ("Pads", "Strings", "Brass", "Winds", "Soundscapes", "FX", "Percussion", "Drums"))]
+GROUPS = [("010 - Keys.fxb", ("Keys", "Plucks", "Mallets", "Bells", "Guitars", "Organs")),
+          ("011 - Bass+Lead.fxb", ("Basses", "Leads")),
+          ("012 - Pads+FX.fxb", ("Pads", "Strings", "Brass", "Winds", "Soundscapes", "FX", "Percussion", "Drums"))]
+# approximate conversions (see xf_to_xd): the same categories again, in banks of their own
+GROUPS2 = [("013 - Keys 2", GROUPS[0][1]), ("014 - Bass+Lead 2", GROUPS[1][1]),
+           ("015 - Pads 2", ("Pads", "Atmospheres", "Voices", "Soundscapes")),
+           ("016 - Strings+Brass 2", ("Strings", "Brass", "Winds")),
+           ("017 - FX+Drums 2", ("FX", "Percussion", "Drums"))]
 
 
 def selftest():
@@ -231,34 +252,49 @@ def main():
         return selftest()
     src, out = sys.argv[1], sys.argv[2]
     pats = sorted(glob.glob(os.path.join(src, "assets", "installer", "**", "Patches", "**", "*.fxp"), recursive=True))
-    ok, skipped = [], {}
+    ok, approx, skipped = [], [], {}
     for f in pats:
         a = read_xf_patch(f)
         if "CC0" not in a.get("license", ""):
             skipped[f] = "license is not CC0"
             continue
+        row = (a.get("category", ""), unent(a.get("programName", os.path.basename(f))), unent(a.get("author", "")))
         v, why = xf_to_xd(a)
-        if v is None:
-            skipped[f] = why
+        if v is not None:
+            ok.append(row + (v,))
             continue
-        ok.append((a.get("category", ""), unent(a.get("programName", os.path.basename(f))), unent(a.get("author", "")), v))
+        v, why2 = xf_to_xd(a, approx=True)
+        if v is None:
+            skipped[f] = why2
+            continue
+        base = os.path.basename(f)[:-4]                       # OB-Xf's accordion / rotary organ files are numbered differently inside than by file name,
+        approx.append((row[0], base, row[2], v))              # so two patches end up with one name: the file name is the unique one
     os.makedirs(out, exist_ok=True)
-    credits = ["# CC0 patches: who made them\n",
+    credits = ["# Factory-style patches: who made them\n",
                "These patches come from the factory patch set of [OB-Xf](https://github.com/surge-synthesizer/OB-Xf) (Surge Synth Team), where every one is marked "
                "`CC0 / Public Domain` in its own file. They were converted to OB-Xd's bank format by `tools/convert_obxf_patches.py` "
                "(the inverse of OB-Xf's own OB-Xd importer), with two changes for the MPC: the voice count stops at 10 (5 with unison) so the CPU keeps up, and each "
-               "patch's Volume is set so they play at a similar level without clipping (`tools/make_cc0_levels.py`). CC0 asks for no credit; it is given here anyway.\n"]
-    for fname, cats in GROUPS:
-        sel = sorted((p for p in ok if p[0] in cats), key=lambda p: (cats.index(p[0]), p[1].lower()))
-        sel = sel[:128]
+               "patch's Volume is set so they play at a similar level without clipping (`tools/make_cc0_levels.py`). CC0 asks for no credit; it is given here anyway.\n\n"
+               "Banks 010-012 are exact conversions. Banks 013-017 (the ones ending in \"2\") use OB-Xf features OB-Xd does not have "
+               "(xpander filter, ring mod, noise colour, second LFO, inverted envelopes); those parts are dropped or mapped to the nearest OB-Xd "
+               "equivalent (xpander becomes the 4-pole low pass), so these patches are close to the originals but not identical.\n"]
+
+    def emit(fname, cats, pool):
+        sel = sorted((p for p in pool if p[0] in cats), key=lambda p: (cats.index(p[0]), p[1].lower()))[:128]
         lv = LEVELS.get(fname)
         if lv and len(lv) == len(sel):                       # loudness evened out by tools/make_cc0_levels.py
             sel = [(c, n, au, v[:P["VOLUME"]] + [lv[i]] + v[P["VOLUME"] + 1:]) for i, (c, n, au, v) in enumerate(sel)]
         write_bank(os.path.join(out, fname), [(n, v) for _, n, _, v in sel])
         credits.append("\n## %s (%d patches)\n\n| Patch | Author | Category |\n|---|---|---|\n" % (fname[:-4].split(" - ", 1)[1], len(sel)))
         credits.append("".join("| %s | %s | %s |\n" % (n.replace("|", "/"), au, c) for c, n, au, _ in sel))
-    open(os.path.join(out, "CREDITS-CC0.md"), "w").write("".join(credits))
-    print("converted %d of %d patches; skipped %d" % (len(ok), len(pats), len(skipped)))
+        return len(sel)
+
+    for fname, cats in GROUPS:
+        emit(fname, cats, ok)
+    for stem, cats in GROUPS2:
+        emit(stem + ".fxb", cats, approx)
+    open(os.path.join(out, "CREDITS.md"), "w").write("".join(credits))
+    print("converted %d exact + %d approximate of %d patches; skipped %d" % (len(ok), len(approx), len(pats), len(skipped)))
     import collections
     print(collections.Counter(skipped.values()).most_common(8))
 

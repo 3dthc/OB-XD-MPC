@@ -13,13 +13,19 @@ __pycache__/
 *.fxp
 dist-private/
 
-# only the cleared banks (Moby Pixel and the three CC0 ones) may live in banks/; anything else you drop there stays local and is never committed
+# only the cleared banks (Moby Pixel and the six converted ones) may live in banks/; anything else you drop there stays local and is never committed
 banks/*
 !banks/000 - Moby Pixel.fxb
-!banks/010 - CC0 Keys.fxb
-!banks/011 - CC0 Bass+Lead.fxb
-!banks/012 - CC0 Pads+FX.fxb
-!banks/CREDITS-CC0.md
+!banks/010 - Keys.fxb
+!banks/011 - Bass+Lead.fxb
+!banks/012 - Pads+FX.fxb
+!banks/013 - Keys 2.fxb
+!banks/014 - Bass+Lead 2.fxb
+!banks/015 - Pads 2.fxb
+!banks/016 - Strings+Brass 2.fxb
+!banks/017 - FX+Drums 2.fxb
+!banks/018 - Classics.fxb
+!banks/CREDITS.md
 !banks/NOTICE.md
 
 # Windows download markers that sneak in when files are unzipped on Windows

@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
+#include <unistd.h>
 #include <string>
 #include <vector>
 extern "C" {
@@ -16,7 +17,15 @@ static void ck(bool c, const char *what, const std::string &got) { printf("%s %s
 static std::string tile(const char *pre, int n, const char *suf = "") { char k[32]; snprintf(k, 32, "%s%d%s", pre, n, suf); return get(k); }
 static int lit(const char *pre, int count) { int c = 0; for (int i = 1; i <= count; i++) if (tile(pre, i, "_on") == "1") c++; return c; }
 
-static int tap_text(const char *pre, int count, const std::string &t) { for (int i = 1; i <= count; i++) if (tile(pre, i) == t) { char k[32]; snprintf(k, 32, "%s%d", pre, i); set(k, "1"); set(k, "0"); return i; } return 0; }
+// the BROWSE bank list shows 8 banks a page; the bank knob moves between pages
+static int find_bank(const char *name) {
+    int found = 0;
+    usleep(2300000);                                  // past the window in which a reload's browse-knob values are ignored
+    for (int pg = 0; pg < 3 && !found; pg++) { char v[8]; snprintf(v, 8, "%d", pg * 8 + 1); set("bk_scroll", v); for (int i = 1; i <= 8; i++) if (tile("bk_", i) == name) found = pg * 8 + i; }
+    set("bk_scroll", "1");
+    return found;
+}
+static int tap_text(const char *pre, int count, const std::string &t) { for (int i = 1; i <= count; i++) if (tile(pre, i) == t) { char k[32]; snprintf(k, 32, "%s%d", pre, i); usleep(300000); set(k, "1"); set(k, "0"); return i; } return 0; }   // a finger's pace: the engine ignores the same tile again within TAP_MS
 static void write_fxp(const std::string &path, const std::string &name) {
     std::string xml = "<discoDSP Val_0=\"0.5\" voiceCount=\"8\" programName=\"" + name + "\"/>";
     std::string chunk; chunk += "\x56\x43\x32\x21"; uint32_t L = (uint32_t)xml.size() + 1; for (int i = 0; i < 4; i++) chunk += (char)((L >> (8 * i)) & 255); chunk += xml; chunk += '\0';
@@ -27,8 +36,9 @@ static void write_fxp(const std::string &path, const std::string &name) {
 static bool exists(const std::string &p) { FILE *f = fopen(p.c_str(), "rb"); if (f) fclose(f); return f != 0; }
 int main(int argc, char **argv) {
     E = mpc_engine(); P = E->create(argv[1]);
+    usleep(2200000);   // past the window in which a reload's browse-knob / LOAD values are ignored (create, set_state)
     std::string b0 = get("bank_name"), p0 = get("patch_name");
-    ck(tile("bk_", 1) != " " && tile("bk_", 2) != " " && tile("bk_", 5) == " ", "bank list: rows 1..4 named, row 5 blank", tile("bk_", 1) + " | " + tile("bk_", 2));
+    ck(tile("bk_", 1) != " " && tile("bk_", 2) != " " && tile("bk_", 8) != " ", "bank list: first page full of named banks", tile("bk_", 1) + " | " + tile("bk_", 2));
     ck(lit("bk_", 7) == 1 && tile("bk_", 1, "_on") == "1", "first bank lit at start", "");
     ck(tile("pt_", 1) == p0 || tile("pt_", 1) != " ", "patch grid has names", tile("pt_", 1) + ", " + tile("pt_", 2));
     ck(lit("pt_", 24) == 1, "one patch lit (the playing one)", "");
@@ -68,6 +78,27 @@ int main(int argc, char **argv) {
     // the old header arrows still work and drag the browser along
     set("bank_next", "1");
     ck(get("bk_scroll") == "1" && get("pt_scroll") == "1" || true, "header arrows still work", get("bank_name"));
+    // ---- one touch, one step -------------------------------------------------------------------------------
+    // MPC delivers a single touch of a button as two sets, and a redraw makes the host report the button's value
+    // back on top of those, so an arrow that acted on every set above 0.5 stepped two or three banks per touch.
+    set("bank", "1");
+    usleep(300000);
+    int b0i = atoi(get("bk_scroll").c_str());
+    set("bank_next", "1"); set("bank_next", "1"); set("bank_next", "1");   // one touch, as the host delivers it
+    int b1i = atoi(get("bk_scroll").c_str());
+    ck(b1i == b0i + 1, "one touch of the bank arrow steps exactly one bank",
+       std::to_string(b0i) + " -> " + std::to_string(b1i));
+    usleep(300000);                                                        // a second touch, a moment later
+    set("bank_next", "1"); set("bank_next", "1");
+    int b2i = atoi(get("bk_scroll").c_str());
+    ck(b2i == b1i + 1, "the next touch steps again, so taps are not swallowed",
+       std::to_string(b1i) + " -> " + std::to_string(b2i));
+    set("pt_scroll", "1");
+    usleep(300000);
+    int p0i = atoi(get("pt_scroll").c_str());
+    set("patch_next", "1"); set("patch_next", "1"); set("patch_next", "1");
+    ck(atoi(get("pt_scroll").c_str()) == p0i + 1, "and one touch of the patch arrow steps exactly one patch",
+       std::to_string(p0i) + " -> " + get("pt_scroll"));
     // ---- the loader: LOAD BANK / LOAD PRESET turn the lists into a file browser, and a tap copies the file into my-banks for good ----
     std::string plug = argv[1], src = argv[2];
     write_fxp(src + "/sub/Test One.fxp", "Test One");
@@ -105,11 +136,52 @@ int main(int argc, char **argv) {
     ck(exists(plug + "/../my-banks/presets/Test One.fxp"), "...and copied into my-banks/presets", "");
     set("load_mode", "0");
     ck(get("br_patch") == "Test One" && get("br_patch_title") == "PATCHES", "back to patches", get("br_patch"));
-    int fb = 0; for (int i = 1; i <= 8; i++) if (tile("bk_", i) == "Friends Bank") fb = i;
+    int fb = find_bank("Friends Bank");
     ck(fb > 0, "the new bank is in the bank list", std::to_string(fb));
     E->destroy(P); P = E->create(argv[1]);                                     // a restart: everything is still there
-    int fb2 = 0, mp = 0; for (int i = 1; i <= 8; i++) { if (tile("bk_", i) == "Friends Bank") fb2 = i; if (tile("bk_", i) == "My Presets") mp = i; }
+    int fb2 = find_bank("Friends Bank"), mp = find_bank("My Presets");
     ck(fb2 > 0 && mp > 0, "after a restart both are still there", std::to_string(fb2) + "," + std::to_string(mp));
+    { int r0 = atoi(get("display_rev").c_str()); set("stop", "1"); int r1 = atoi(get("display_rev").c_str()); set("stop", "0"); int r2 = atoi(get("display_rev").c_str());
+      ck(r1 > r0 && r2 == r1 && get("stop") == "0", "STOP press asks for a redraw (the light goes out), release does not", std::to_string(r0) + "," + std::to_string(r1) + "," + std::to_string(r2)); }
+    // Project state and the host's bank pokes (issues #1 and #3)
+    E->destroy(P); P = E->create(argv[1]);
+    set("bank", "2"); set("patch", "5"); set("cutoff", "0.321");
+    std::string sbn = get("bank_name"), spn = get("patch_name");
+    char st[8192] = ""; int sl = E->get_param(P, "state", st, sizeof st);
+    ck(sl > 0 && sl < 8000, "state is written and fits the wrapper's chunk", std::to_string(sl));
+    set("bank", "1"); set("cutoff", "0.9");
+    set("state", st);
+    ck(get("bank_name") == sbn && get("patch_name") == spn, "state restores the bank and patch", get("bank_name") + " / " + get("patch_name"));
+    ck(get("cutoff").substr(0, 5) == "0.321", "...and the edited knob", get("cutoff"));
+    { std::string a = get("bank_name"), b = get("patch_name"), c = get("cutoff");
+      set("bank", "100"); set("bank", "0"); set("bank", "-3");
+      ck(get("bank_name") == a && get("patch_name") == b && get("cutoff") == c, "bank=100, 0 and negatives are ignored (STOP poke)", get("bank_name") + " / " + get("patch_name")); }
+    set("state", "junk"); set("state", "");
+    ck(get("bank_name") == sbn, "a junk state changes nothing", get("bank_name"));
+    E->destroy(P); P = E->create(argv[1]);
+    set("state", st);
+    ck(get("bank_name") == sbn && get("patch_name") == spn && get("cutoff").substr(0, 5) == "0.321", "state restores into a fresh plugin (project reload)", get("bank_name") + " / " + get("patch_name"));
+    ck(get("bk_scroll") == get("bank"), "...and the browser looks at the restored bank", get("bk_scroll") + " vs " + get("bank"));
+    // the host replaying values one by one after the state, with the browser left on another bank when saved
+    set("bk_scroll", "4"); set("pt_scroll", "1"); set("load_mode", "1");
+    ck(get("patch_name") == spn && get("cutoff").substr(0, 5) == "0.321" && get("load_mode") == "0",
+       "values replayed after a reload: the patch knob loads nothing, no file list opens", get("bank_name") + " / " + get("patch_name"));
+    // a project saved before 0.4.6 (no state): values one by one into a fresh plugin
+    E->destroy(P); P = E->create(argv[1]);
+    set("bank", "2"); set("patch", "5"); set("cutoff", "0.321"); set("bk_scroll", "4"); set("pt_scroll", "1"); set("load_mode", "1");
+    ck(get("bank_name") == sbn && get("patch_name") == spn && get("cutoff").substr(0, 5) == "0.321" && get("load_mode") == "0",
+       "an old project keeps its patch and edits (the browse knob's saved value loads nothing)", get("bank_name") + " / " + get("patch_name"));
+    usleep(2200000);
+    set("bk_scroll", "1"); set("pt_scroll", "2");
+    ck(get("patch_name") != spn, "a moment later the patch knob plays again", get("patch_name"));
+    { std::string old = st; size_t q = old.find("bank=010 - Keys"); bool had = q != std::string::npos;          // a project saved before the "CC0" was dropped
+      if (had) old.insert(q + 10, "CC0 ");
+      E->destroy(P); P = E->create(argv[1]); set("state", old.c_str());
+      ck(had && get("bank_name") == sbn && get("patch_name") == spn, "a project saved with the old \"CC0 Keys\" bank name still recalls its patch", get("bank_name") + " / " + get("patch_name")); }
+    { E->destroy(P); P = E->create(argv[1]); set("bank", "5"); set("patch", "2");                              // "Keys 2": slots 1 and 2 are both "Accordion 1"
+      std::string n2 = get("patch_name"); char st2[8192] = ""; E->get_param(P, "state", st2, sizeof st2);
+      set("patch", "1"); set("state", st2);
+      ck(get("patch") == "2" && get("patch_name") == n2, "two patches with one name: the saved slot is restored", get("patch") + " / " + get("patch_name")); }
     printf("%s\n", fails ? "FAILED" : "PASSED");
     return fails ? 1 : 0;
 }

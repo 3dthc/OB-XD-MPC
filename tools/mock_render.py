@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Preview of the panel pages: each tab's background plus the knob / button / selector pictures at their layout positions.
-usage: mock_render.py out_prefix [theme]   (run from the repo root after make_skin.py; writes out_prefix-osc.png, out_prefix-filter.png, ...; theme = 0..3, default 0)
+usage: mock_render.py out_prefix [theme]   (run from the repo root after make_skin.py; writes out_prefix-osc.png, out_prefix-filter.png, ...; theme = 0..4, default 0)
 Knobs are shown at frame 40, every 3rd button lit; the text widgets are stand-ins."""
 import re, sys, os
 from PIL import Image, ImageDraw, ImageFont
@@ -55,7 +55,7 @@ for name, src in zip(tabs[0::2], tabs[1::2]):
             cols_, rows_, th_, gap_ = int(kv(l, "cols")), int(kv(l, "rows")), int(kv(l, "th")), int(kv(l, "gap"))
             tw_ = (w0 - (cols_ - 1) * gap_) // cols_
             off, on = img(kv(l, "img")), img(kv(l, "img_on"))
-            names = (["Moby Pixel", "CC0 Keys", "CC0 Bass+Lead", "CC0 Pads+FX"] if kv(l, "key") == "bk" else
+            names = (["Moby Pixel", "Keys", "Bass+Lead", "Pads+FX"] if kv(l, "key") == "bk" else
                      ["Acoustic Pia..", "An Ocean Swift", "CP Seventy", "E. Piano 2", "Everything", "Harpkies", "Harpsi", "Harpsichord",
                       "It's an OB-X!", "J60 Neon Main", "J60 Neon PW 1", "MelloWow", "OB Piano", "OBX Clavinet", "Smoothful", "Subtle",
                       "Sweet Spot", "Twindlin'", "J60 PWM Pluck", "J60 Saw Pluck", "Pizzi", "Simple Saw P..", "Glockenspiel", "Tubular Bells"])
@@ -81,7 +81,7 @@ for name, src in zip(tabs[0::2], tabs[1::2]):
             cx_, cy_, w_, h_ = int(kv(l, "cx")), int(kv(l, "cy")) - Y_OFF, int(kv(l, "w")), int(kv(l, "h"))
             if kv(l, "field") != "none":
                 dr.rounded_rectangle([cx_ - w_ // 2, cy_ - h_ // 2, cx_ + w_ // 2, cy_ + h_ // 2], 6, fill=(18, 22, 30), outline=(110, 125, 150), width=2)
-            dr.text((cx_ - w_ // 2 + 14, cy_ - 11), (("PATCHES" if LOADER in ("", "open") else ("BANK (.FXB)" if LOADER == "bank" else "PRESET (.FXP)")) if kv(l, "key") == "load_mode" else ["Slate", "MPC Grey", "MPC Black", "Retro"][THEME]), font=f3, fill=(235, 240, 250))
+            dr.text((cx_ - w_ // 2 + 14, cy_ - 11), (("PATCHES" if LOADER in ("", "open") else ("BANK (.FXB)" if LOADER == "bank" else "PRESET (.FXP)")) if kv(l, "key") == "load_mode" else ["Ocean", "Violet", "MPC Black", "Tangerine", "Jade"][THEME]), font=f3, fill=(235, 240, 250))
             if LOADER == "open" and kv(l, "key") == "load_mode":
                 n_, rh_ = 3, 40
                 ph_ = n_ * rh_ + 12
@@ -119,9 +119,9 @@ for name, src in zip(tabs[0::2], tabs[1::2]):
         elif t == "readout" and f:
             k = kv(l, "key")
             if k in ("bank_name", "patch_name"):
-                dr.text((cx - int(kv(l, "w")) // 2 + 6, cy - 13), "CC0 Keys" if k == "bank_name" else "E. Piano 2", font=f, fill=col)
+                dr.text((cx - int(kv(l, "w")) // 2 + 6, cy - 13), "Keys" if k == "bank_name" else "E. Piano 2", font=f, fill=col)
             if k in ("br_bank", "br_patch"):
-                txt = ("CC0 Keys" if k == "br_bank" else "E. Piano 2") if not LOADER or LOADER == "open" else (
+                txt = ("Keys" if k == "br_bank" else "E. Piano 2") if not LOADER or LOADER == "open" else (
                     ("LOAD BANK" if LOADER == "bank" else "LOAD PRESET") if k == "br_bank" else "/sdcard/Downloads")
                 dr.text((cx - int(kv(l, "w")) // 2 + 6, cy - 13), txt, font=f, fill=col)
             if k in ("br_bank_cap", "br_patch_cap"):

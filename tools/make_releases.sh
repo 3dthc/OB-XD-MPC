@@ -7,12 +7,12 @@
 #
 # The banks are plain files in the plugin's "banks" folder, so the two zips hold the same plugin. You can also skip the private zip
 # and just copy .fxb files into <plugin folder>/my-banks/ on the MPC (kept on upgrade; banks/ is replaced by every install).
-# Environment: MPC_VST (default ~/mpc-vst-plugins), OWNER (default 3dthc), VERSION (default 0.3.0)
+# Environment: MPC_VST (default ~/mpc-vst-plugins), OWNER (default 3dthc), VERSION (default 0.4.7)
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export MPC_VST="${MPC_VST:-$HOME/mpc-vst-plugins}"
 OWNER="${OWNER:-3dthc}"
-VERSION="${VERSION:-0.3.0}"
+VERSION="${VERSION:-0.4.7}"
 BANKS="${1:-}"
 ABOUT="OB-Xd virtual analog polysynth (unofficial port)."
 SKIN="vst/build/skin/sd88me - VST - OB-Xd"
@@ -31,11 +31,17 @@ echo "== public zip (cleared banks only) =="
 # The public zip is built from a staging folder holding ONLY the cleared banks and their notices, copied by exact name.
 # Nothing else in banks/ (or anywhere else) can get in, and every bank is checked against the SHA-256 listed here.
 #   Moby Pixel Bank: GPL community repository (see banks/NOTICE.md)
-#   CC0 Keys / Bass+Lead / Pads+FX: converted from OB-Xf's CC0 / public-domain patches (see banks/CREDITS-CC0.md)
+#   Keys / Bass+Lead / Pads+FX (and the "2" banks, approximate conversions): converted from OB-Xf's CC0 / public-domain patches (see banks/CREDITS.md)
 CLEARED="29cf57db9de19f257297c80bd3ccb7a4c1b142a0764a75a7844bd6d2338c68e8  000 - Moby Pixel.fxb
-5d27f97dce2b63682a68f462f4666349535cd51c548c218cee32e34c998b8995  010 - CC0 Keys.fxb
-c66035aed9d5aa77b0a8bda52708e0049b2145ec52075d20d733e122740bd9fa  011 - CC0 Bass+Lead.fxb
-4aff0750d54e7f187793b1dcf93699bb8e0c01868da3d7eec718ca4f304d5f30  012 - CC0 Pads+FX.fxb"
+5d27f97dce2b63682a68f462f4666349535cd51c548c218cee32e34c998b8995  010 - Keys.fxb
+c66035aed9d5aa77b0a8bda52708e0049b2145ec52075d20d733e122740bd9fa  011 - Bass+Lead.fxb
+4aff0750d54e7f187793b1dcf93699bb8e0c01868da3d7eec718ca4f304d5f30  012 - Pads+FX.fxb
+fe963701f2f851f49285fbbec439278e2651fc31cc3b12b6a43cf83ed29d5201  013 - Keys 2.fxb
+3131f2b3df14d44c9658fdd3fcaf6f67bb657b91ff7aacfa6028290554c71faf  014 - Bass+Lead 2.fxb
+049e1306bf58bfd802269299b61f85c38a2a5e4f53f7595c813a94f9b1def61f  015 - Pads 2.fxb
+49271249ce54917c151b68f96fda81e8584d26d44a1b5f7d90e74b265b5ecbb5  016 - Strings+Brass 2.fxb
+4752488ceda56a1cf47a8623d4fb6cd38d6fe0deff71357984be4c05e1d070ee  017 - FX+Drums 2.fxb
+45dd28c421ad170f8084672e0013ec65e2ba919552e8be482ab220ee00220c94  018 - Classics.fxb"
 PUB="$(mktemp -d)"
 NAMES=""
 while IFS= read -r line; do
@@ -48,9 +54,9 @@ while IFS= read -r line; do
 done <<EOF
 $CLEARED
 EOF
-cp banks/NOTICE.md banks/CREDITS-CC0.md "$PUB/"
+cp banks/NOTICE.md banks/CREDITS.md "$PUB/"
 EXTRA=$(find banks -maxdepth 1 -type f ! -name '*.md' | wc -l)
-[ "$EXTRA" = "4" ] || echo "note: $((EXTRA - 4)) other file(s) in banks/ are ignored for the public zip"
+[ "$EXTRA" = "10" ] || echo "note: $((EXTRA - 10)) other file(s) in banks/ are ignored for the public zip"
 package dist-public "$PUB"
 rm -rf "$PUB"
 Z="dist-public/OB-Xd-$VERSION-mpc-armv7.zip"

@@ -31,5 +31,10 @@
     "PARAM_TEXT_MAX": 40,
     "HAS_LFO_BPM": 1,
     "HAS_TRANSPORT": 1
-  }
+  },
+  "skin_os": 2,
+  "targets": [
+    "armv7",
+    "aarch64"
+  ]
 }

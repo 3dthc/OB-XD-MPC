@@ -22,13 +22,15 @@ int main(int argc, char **argv) {
     for (int bk = 1; bk <= nbanks; bk++) {
         snprintf(v, 16, "%d", bk);
         e->set_param(p, "bank", v);
+        v[0] = 0;
         e->get_param(p, "bank_name", b, 256);
         char bn[256]; strcpy(bn, b), b[0] = 0;
         char firstn[256] = "";
         for (int pt = 0; pt < 200; pt++) {
-            if (pt > 0) e->set_param(p, "patch_next", "1");
+            if (pt > 0) { snprintf(v, 16, "%d", pt + 1); e->set_param(p, "patch", v); }    // (the arrows ignore taps closer than 250 ms)
             e->get_param(p, "patch_name", b, 256);
-            if (pt == 0) strcpy(firstn, b); else if (!strcmp(firstn, b) && pt > 1) break;   // wrapped round
+            char pn[16] = "1"; e->get_param(p, "patch", pn, 16);
+            if (atoi(pn) != pt + 1) break;                                                    // past the last patch
             char vol[32] = "0"; e->get_param(p, "volume", vol, 32);
             double s = 0, pk = 0; long n = 0; int16_t o[256];
             chord(e, p, 1);
