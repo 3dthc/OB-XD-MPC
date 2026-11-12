@@ -22,12 +22,12 @@ on:
 
 jobs:
   vst:
-    uses: 3dthc/mpc-vst-plugins/.github/workflows/vst-release.yml@2ce3805d80a1ee8cba9a10ececc8c668371b5a28
+    uses: 3dthc/mpc-vst-plugins/.github/workflows/vst-release.yml@bee650d7d6444f972933d991ded3b9e095e169a7
     permissions: { contents: write }
     with:
       tag: ob-xd-mpc-${{ inputs.version }}
       version: ${{ inputs.version }}
-      tools_ref: 2ce3805d80a1ee8cba9a10ececc8c668371b5a28
+      tools_ref: bee650d7d6444f972933d991ded3b9e095e169a7
       vst_dir: vst
       build: '"$MPC_VST/tools/build_port.sh" vst/vst.json'
       extra: banks:banks
@@ -36,3 +36,5 @@ jobs:
       plugin_id: obxdmpc
       license: GPL-3.0-only
       dry_run: ${{ inputs.dry_run }}
+      desktop: true
+      desktop_data: banks
