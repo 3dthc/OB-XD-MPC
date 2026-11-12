@@ -220,7 +220,10 @@ GROUPS = [("010 - Keys.fxb", ("Keys", "Plucks", "Mallets", "Bells", "Guitars", "
           ("011 - Bass+Lead.fxb", ("Basses", "Leads")),
           ("012 - Pads+FX.fxb", ("Pads", "Strings", "Brass", "Winds", "Soundscapes", "FX", "Percussion", "Drums"))]
 # approximate conversions (see xf_to_xd): the same categories again, in banks of their own
-GROUPS2 = [("013 - Keys 2", GROUPS[0][1]), ("014 - Bass+Lead 2", GROUPS[1][1]), ("015 - Pads+FX 2", GROUPS[2][1])]
+GROUPS2 = [("013 - Keys 2", GROUPS[0][1]), ("014 - Bass+Lead 2", GROUPS[1][1]),
+           ("015 - Pads 2", ("Pads", "Atmospheres", "Voices", "Soundscapes")),
+           ("016 - Strings+Brass 2", ("Strings", "Brass", "Winds")),
+           ("017 - FX+Drums 2", ("FX", "Percussion", "Drums"))]
 
 
 def selftest():
@@ -272,7 +275,7 @@ def main():
                "`CC0 / Public Domain` in its own file. They were converted to OB-Xd's bank format by `tools/convert_obxf_patches.py` "
                "(the inverse of OB-Xf's own OB-Xd importer), with two changes for the MPC: the voice count stops at 10 (5 with unison) so the CPU keeps up, and each "
                "patch's Volume is set so they play at a similar level without clipping (`tools/make_cc0_levels.py`). CC0 asks for no credit; it is given here anyway.\n\n"
-               "Banks 010-012 are exact conversions. Banks 013-015 (the ones ending in \"2\") use OB-Xf features OB-Xd does not have "
+               "Banks 010-012 are exact conversions. Banks 013-017 (the ones ending in \"2\") use OB-Xf features OB-Xd does not have "
                "(xpander filter, ring mod, noise colour, second LFO, inverted envelopes); those parts are dropped or mapped to the nearest OB-Xd "
                "equivalent (xpander becomes the 4-pole low pass), so these patches are close to the originals but not identical.\n"]
 

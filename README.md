@@ -71,7 +71,7 @@ output out of public releases.
 
 ## More banks (optional, for your own device)
 
-The release ships the Moby Pixel bank (GPL) and six banks of patches converted from OB-Xf's CC0 factory set (about 390 patches in the style of OB-Xd's own factory sounds, credits in `banks/CREDITS.md`; banks 013-015 use a few OB-Xf features OB-Xd lacks, so they are close to the originals rather than exact). OB-Xd's own factory banks belong to discoDSP and their authors, so they are not included. If you
+The release ships the Moby Pixel bank (GPL) and eight banks of patches converted from OB-Xf's CC0 factory set (about 490 patches in the style of OB-Xd's own factory sounds, credits in `banks/CREDITS.md`; banks 013-015 use a few OB-Xf features OB-Xd lacks, so they are close to the originals rather than exact). OB-Xd's own factory banks belong to discoDSP and their authors, so they are not included. If you
 have OB-Xd installed (it is free from discoDSP), copy its `.fxb` files into a `my-banks` folder next to the plugin's `banks` folder on the MPC (create it; the plugin reads both):
 
     /sdcard/Synths/sd88me - VST - OB-Xd/my-banks/

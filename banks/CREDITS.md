@@ -1,7 +1,7 @@
 # Factory-style patches: who made them
 These patches come from the factory patch set of [OB-Xf](https://github.com/surge-synthesizer/OB-Xf) (Surge Synth Team), where every one is marked `CC0 / Public Domain` in its own file. They were converted to OB-Xd's bank format by `tools/convert_obxf_patches.py` (the inverse of OB-Xf's own OB-Xd importer), with two changes for the MPC: the voice count stops at 10 (5 with unison) so the CPU keeps up, and each patch's Volume is set so they play at a similar level without clipping (`tools/make_cc0_levels.py`). CC0 asks for no credit; it is given here anyway.
 
-Banks 010-012 are exact conversions. Banks 013-015 (the ones ending in "2") use OB-Xf features OB-Xd does not have (xpander filter, ring mod, noise colour, second LFO, inverted envelopes); those parts are dropped or mapped to the nearest OB-Xd equivalent (xpander becomes the 4-pole low pass), so these patches are close to the originals but not identical.
+Banks 010-012 are exact conversions. Banks 013-017 (the ones ending in "2") use OB-Xf features OB-Xd does not have (xpander filter, ring mod, noise colour, second LFO, inverted envelopes); those parts are dropped or mapped to the nearest OB-Xd equivalent (xpander becomes the 4-pole low pass), so these patches are close to the originals but not identical.
 
 ## Keys (27 patches)
 
@@ -290,7 +290,7 @@ Banks 010-012 are exact conversions. Banks 013-015 (the ones ending in "2") use 
 | Unison SIDicious | Black Sided Sun | Leads |
 | Xcentor | Saif Sameer | Leads |
 
-## Pads+FX 2 (128 patches)
+## Pads 2 (95 patches)
 
 | Patch | Author | Category |
 |---|---|---|
@@ -356,6 +356,44 @@ Banks 010-012 are exact conversions. Banks 013-015 (the ones ending in "2") use 
 | Wasteland Two | Black Sided Sun | Pads |
 | Waveling | Saif Sameer | Pads |
 | Xatal | Jacky Ligon | Pads |
+| Aboard The Arp Train | 0.5° | Atmospheres |
+| Bouncing Phaser | Vincent Zauhar | Atmospheres |
+| Gated Unstable Plucks | 0.5° | Atmospheres |
+| S&H Drone | Saif Sameer | Atmospheres |
+| Vibrores | Saif Sameer | Atmospheres |
+| Choir Aah 1 | Aleksey Zhehanov | Voices |
+| Choir Aah 2 | Aleksey Zhehanov | Voices |
+| Choir Ooh 1 | Aleksey Zhehanov | Voices |
+| Choir Ooh 2 | Aleksey Zhehanov | Voices |
+| Choirah | Saif Sameer | Voices |
+| Fuath | Black Sided Sun | Voices |
+| Heli | Black Sided Sun | Voices |
+| Missa Pro | Black Sided Sun | Voices |
+| Whoa, Easier! | Black Sided Sun | Voices |
+| Woe Woe | Black Sided Sun | Voices |
+| Woo-Aah | Black Sided Sun | Voices |
+| Clicky | Fedir Tkachov | Soundscapes |
+| Dark Wave | Black Sided Sun | Soundscapes |
+| Green Fury | Black Sided Sun | Soundscapes |
+| In The Sky | Black Sided Sun | Soundscapes |
+| Incenses | Black Sided Sun | Soundscapes |
+| Into Cinemas | Ocean Swift | Soundscapes |
+| It Is Alive | Black Sided Sun | Soundscapes |
+| Noiser | Black Sided Sun | Soundscapes |
+| Oleinized | Black Sided Sun | Soundscapes |
+| Overvolt | Black Sided Sun | Soundscapes |
+| Radio Sizzle | Black Sided Sun | Soundscapes |
+| Rain On The Roof | Vincent Zauhar | Soundscapes |
+| Sand For Breakfast | 0.5° | Soundscapes |
+| Scratch Beat | 0.5° | Soundscapes |
+| Serious Intentions | Fedir Tkachov | Soundscapes |
+| Taj Syncer | Ocean Swift | Soundscapes |
+| VHS Gallop | 0.5° | Soundscapes |
+
+## Strings+Brass 2 (59 patches)
+
+| Patch | Author | Category |
+|---|---|---|
 | Attack Strings | Saif Sameer | Strings |
 | Cello | Aleksey Zhehanov | Strings |
 | Double Bass | Aleksey Zhehanov | Strings |
@@ -415,10 +453,61 @@ Banks 010-012 are exact conversions. Banks 013-015 (the ones ending in "2") use 
 | Tenor Sax | Aleksey Zhehanov | Winds |
 | Tenor Sax Ensemble | Aleksey Zhehanov | Winds |
 | Tenor Sax Soft | Aleksey Zhehanov | Winds |
-| Clicky | Fedir Tkachov | Soundscapes |
-| Dark Wave | Black Sided Sun | Soundscapes |
-| Green Fury | Black Sided Sun | Soundscapes |
-| In The Sky | Black Sided Sun | Soundscapes |
-| Incenses | Black Sided Sun | Soundscapes |
-| Into Cinemas | Ocean Swift | Soundscapes |
-| It Is Alive | Black Sided Sun | Soundscapes |
+
+## FX+Drums 2 (53 patches)
+
+| Patch | Author | Category |
+|---|---|---|
+| Bathtub Ducks | Ocean Swift | FX |
+| Borked Radio | 0.5° | FX |
+| BP Stacker | Saif Sameer | FX |
+| Fast Forward | 0.5° | FX |
+| Filter Tone Drone | John Valentine | FX |
+| FMer Runner | Ocean Swift | FX |
+| Frozen Radiation | Den Rize | FX |
+| Glitch Heart | 0.5° | FX |
+| Grey Colony | Black Sided Sun | FX |
+| I Broke It | Pebblestream | FX |
+| Lab Clock | 0.5° | FX |
+| Magnetic Storm | Saif Sameer | FX |
+| Moaning Wind | Saif Sameer | FX |
+| Mosquito | Pebblestream | FX |
+| Nine Ten Done | Ocean Swift | FX |
+| Pulsing Alarm | Pebblestream | FX |
+| Race Condition | 0.5° | FX |
+| Robo Whisp | Ocean Swift | FX |
+| Sharp Blast | Saif Sameer | FX |
+| Strong Gusts Of Wind | Artur Rembe | FX |
+| Thunder Malfunction | 0.5° | FX |
+| Use Delay | Black Sided Sun | FX |
+| Void Blizzard | Black Sided Sun | FX |
+| Wide Winds | Ocean Swift | FX |
+| Bongo | Aleksey Zhehanov | Percussion |
+| Cowbell | Aleksey Zhehanov | Percussion |
+| Pan Drum | Black Sided Sun | Percussion |
+| Robo Percer | Ocean Swift | Percussion |
+| Taiko | Aleksey Zhehanov | Percussion |
+| Tambourine | Aleksey Zhehanov | Percussion |
+| Broken Shakers | Artur Rembe | Drums |
+| Brush Snare 1 | Aleksey Zhehanov | Drums |
+| Brush Snare 2 | Aleksey Zhehanov | Drums |
+| Brush Snare 3 | Aleksey Zhehanov | Drums |
+| Crash Cymbal | Aleksey Zhehanov | Drums |
+| Hand Cymbal | Aleksey Zhehanov | Drums |
+| Hi-Hat Closed | Aleksey Zhehanov | Drums |
+| Hi-Hat Open | Aleksey Zhehanov | Drums |
+| Kick 5 | Aleksey Zhehanov | Drums |
+| Kick Harder | Artur Rembe | Drums |
+| Kick Pitcher | Artur Rembe | Drums |
+| Kick Softer | Artur Rembe | Drums |
+| Marching Snare | Aleksey Zhehanov | Drums |
+| Ride Cymbal | Aleksey Zhehanov | Drums |
+| Ride Cymbal Bell | Aleksey Zhehanov | Drums |
+| Snare 1 | Aleksey Zhehanov | Drums |
+| Snare 2 | Aleksey Zhehanov | Drums |
+| Snare 3 | Aleksey Zhehanov | Drums |
+| Snare 5 | Aleksey Zhehanov | Drums |
+| Snare Roll | Aleksey Zhehanov | Drums |
+| Timpani | Aleksey Zhehanov | Drums |
+| Tom 1 | Aleksey Zhehanov | Drums |
+| Tom 3 | Aleksey Zhehanov | Drums |

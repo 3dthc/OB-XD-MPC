@@ -38,7 +38,7 @@ int main(int argc, char **argv) {
     E = mpc_engine(); P = E->create(argv[1]);
     usleep(2200000);   // past the window in which a reload's browse-knob / LOAD values are ignored (create, set_state)
     std::string b0 = get("bank_name"), p0 = get("patch_name");
-    ck(tile("bk_", 1) != " " && tile("bk_", 2) != " " && tile("bk_", 7) != " " && tile("bk_", 8) == " ", "bank list: rows 1..7 named, row 8 blank", tile("bk_", 1) + " | " + tile("bk_", 2));
+    ck(tile("bk_", 1) != " " && tile("bk_", 2) != " " && tile("bk_", 8) != " ", "bank list: first page full of named banks", tile("bk_", 1) + " | " + tile("bk_", 2));
     ck(lit("bk_", 7) == 1 && tile("bk_", 1, "_on") == "1", "first bank lit at start", "");
     ck(tile("pt_", 1) == p0 || tile("pt_", 1) != " ", "patch grid has names", tile("pt_", 1) + ", " + tile("pt_", 2));
     ck(lit("pt_", 24) == 1, "one patch lit (the playing one)", "");

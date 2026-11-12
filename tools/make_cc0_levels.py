@@ -9,7 +9,7 @@ usage: make_cc0_levels.py <OB-Xf checkout>
 import json, os, shutil, subprocess, sys, tempfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 TARGET, PEAK_MAX = 0.09, 0.7          # a six-note chord: level (rms) to aim for, and the highest peak allowed (1.0 clips)
-FILES = {n: "%s - %s.fxb" % (k, n) for k, n in (("010", "Keys"), ("011", "Bass+Lead"), ("012", "Pads+FX"), ("013", "Keys 2"), ("014", "Bass+Lead 2"), ("015", "Pads+FX 2"))}
+FILES = {n: "%s - %s.fxb" % (k, n) for k, n in (("010", "Keys"), ("011", "Bass+Lead"), ("012", "Pads+FX"), ("013", "Keys 2"), ("014", "Bass+Lead 2"), ("015", "Pads 2"), ("016", "Strings+Brass 2"), ("017", "FX+Drums 2"))}
 LV = os.path.join(HERE, "cc0_levels.json")
 src = sys.argv[1]
 KEEP = {}
@@ -21,7 +21,7 @@ for it in range(4):
     subprocess.check_call([sys.executable, os.path.join(HERE, "convert_obxf_patches.py"), src, os.path.join(tmp, "banks")],
                           stdout=subprocess.DEVNULL)
     shutil.copy(os.path.join(HERE, "..", "banks", "000 - Moby Pixel.fxb"), os.path.join(tmp, "banks"))   # bank 0, as installed
-    rows = [l.split("|") for l in subprocess.check_output(["bash", os.path.join(HERE, "level_audit.sh"), tmp, "7"]).decode().splitlines()]
+    rows = [l.split("|") for l in subprocess.check_output(["bash", os.path.join(HERE, "level_audit.sh"), tmp, "9"]).decode().splitlines()]
     out = {}
     worst = 0.0
     for bank, num, name, vol, rms, peak, cpu in rows:
