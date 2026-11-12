@@ -1,5 +1,5 @@
 # Builds OB-Xd for MPC in GitHub Actions and attaches OB-Xd-<version>-mpc-armv7.zip to a DRAFT release. The zip ships only
-# the cleared banks committed in banks/ (Moby Pixel and the eight converted banks; .gitignore keeps anything else out of the repo).
+# the cleared banks committed in banks/ (Moby Pixel and the nine other banks; .gitignore keeps anything else out of the repo).
 # Actions -> Release -> Run workflow, enter the version. Install that zip on an MPC, check it, then publish the draft.
 # Release notes: write docs/releases/v<version>.md first -- what changed and what was fixed since the last release (not
 # install steps; those are in INSTALL.md inside the zip). The draft's notes are that file.

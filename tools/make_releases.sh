@@ -40,7 +40,8 @@ fe963701f2f851f49285fbbec439278e2651fc31cc3b12b6a43cf83ed29d5201  013 - Keys 2.f
 3131f2b3df14d44c9658fdd3fcaf6f67bb657b91ff7aacfa6028290554c71faf  014 - Bass+Lead 2.fxb
 049e1306bf58bfd802269299b61f85c38a2a5e4f53f7595c813a94f9b1def61f  015 - Pads 2.fxb
 49271249ce54917c151b68f96fda81e8584d26d44a1b5f7d90e74b265b5ecbb5  016 - Strings+Brass 2.fxb
-4752488ceda56a1cf47a8623d4fb6cd38d6fe0deff71357984be4c05e1d070ee  017 - FX+Drums 2.fxb"
+4752488ceda56a1cf47a8623d4fb6cd38d6fe0deff71357984be4c05e1d070ee  017 - FX+Drums 2.fxb
+45dd28c421ad170f8084672e0013ec65e2ba919552e8be482ab220ee00220c94  018 - Classics.fxb"
 PUB="$(mktemp -d)"
 NAMES=""
 while IFS= read -r line; do
@@ -55,7 +56,7 @@ $CLEARED
 EOF
 cp banks/NOTICE.md banks/CREDITS.md "$PUB/"
 EXTRA=$(find banks -maxdepth 1 -type f ! -name '*.md' | wc -l)
-[ "$EXTRA" = "9" ] || echo "note: $((EXTRA - 9)) other file(s) in banks/ are ignored for the public zip"
+[ "$EXTRA" = "10" ] || echo "note: $((EXTRA - 10)) other file(s) in banks/ are ignored for the public zip"
 package dist-public "$PUB"
 rm -rf "$PUB"
 Z="dist-public/OB-Xd-$VERSION-mpc-armv7.zip"
