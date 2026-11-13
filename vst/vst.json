@@ -23,7 +23,7 @@
   "art": "html",
   "skin_post": "skin_post.py",
   "programs": {
-    "param": "patch"
+    "param": "all"
   },
   "defines": {
     "VST3_REPLACES_VST2": 1,

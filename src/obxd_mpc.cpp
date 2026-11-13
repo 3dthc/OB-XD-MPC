@@ -509,6 +509,13 @@ void set_param(void *p, const char *key, const char *val) {
         else if (!strcmp(key, "pt_pg_next")) { if ((s->ppage + 1) * PT_TILES < bank_patches(s, s->bb)) { s->ppage++; s->rev++; } }
         return;
     }
+    if (!strcmp(key, "all")) {                              // the host's program list: one running number through every bank
+        int v = (int)(atof(val) + 0.5) - 1, cur = (s->bank >= 0 && s->bank + 1 < (int)s->cum.size()) ? s->cum[s->bank] + s->patch : -1;
+        if (v == cur) return;
+        for (size_t b = 0; b + 1 < s->cum.size(); b++)
+            if (v >= s->cum[b] && v < s->cum[b + 1]) { play_patch(s, (int)b, v - s->cum[b]); break; }
+        return;
+    }
     if (!strcmp(key, "bank") || !strcmp(key, "patch") || !strncmp(key, "bank_", 5) || !strncmp(key, "patch_", 6)) {
         int nb = (int)s->banks.size(), np = (int)s->patches.size();
         int v = (int)(atof(val) + 0.5) - 1;                  // the controls count from 1
@@ -567,6 +574,10 @@ int get_param(void *p, const char *key, char *buf, int n) {
     if (!strcmp(key, "display_rev")) return snprintf(buf, n, "%d", s->rev);
     if (!strcmp(key, "bank")) return snprintf(buf, n, "%d", s->bank + 1);
     if (!strcmp(key, "patch")) return snprintf(buf, n, "%d", s->patch + 1);
+    if (!strcmp(key, "all")) {   // the patch as one running number through every bank (the host's program list)
+        int b = s->bank;
+        return snprintf(buf, n, "%d", (b >= 0 && b + 1 < (int)s->cum.size()) ? s->cum[b] + s->patch + 1 : 1);
+    }
     if (!strcmp(key, "bk_scroll")) return snprintf(buf, n, "%d", s->bb + 1);
     if (!strcmp(key, "pt_scroll")) return snprintf(buf, n, "%d", s->bb == s->bank ? s->patch + 1 : 1);
     if (!strcmp(key, "load_mode")) return snprintf(buf, n, "%d", s->fmode);
@@ -643,6 +654,13 @@ int get_param(void *p, const char *key, char *buf, int n) {
             return fit_name(buf, n, s->patches[s->patch].name);
         }
         return snprintf(buf, n, "0");                       // the arrows
+    }
+    if (!strncmp(key, "all:", 4)) {                         // a patch's name in the running list, with its bank
+        int k = atoi(key + 4) - 1;
+        for (size_t b = 0; b + 1 < s->cum.size(); b++)
+            if (k >= s->cum[b] && k < s->cum[b + 1])
+                return snprintf(buf, n, "%s (%s)", s->names[b][k - s->cum[b]].c_str(), s->banks[b].label.c_str());
+        return snprintf(buf, n, "-");
     }
     if (!strncmp(key, "patch:", 6)) {                       // a patch's name without loading it (the PRESET menu)
         int k = atoi(key + 6) - 1;

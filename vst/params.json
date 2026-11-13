@@ -1103,6 +1103,14 @@
       "max": 0,
       "default": 0,
       "display": "string"
+    },
+    {
+      "key": "all",
+      "name": "Patch (All Banks)",
+      "min": 1,
+      "max": 518,
+      "default": 1,
+      "display": "int"
     }
   ]
 }
