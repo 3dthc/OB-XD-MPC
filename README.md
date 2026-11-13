@@ -65,6 +65,12 @@ Both Mac zips are universal (Apple Silicon and Intel). If macOS says the plugin 
 curl -fsSL https://raw.githubusercontent.com/3dthc/mpc-vst-plugins/desktop-vst3-openmpc/tools/install_mac_vst3.sh | bash
 ```
 
+To check every installed Audio Unit with Apple's validator (PASS or FAIL for each):
+
+```
+curl -fsSL https://raw.githubusercontent.com/3dthc/mpc-vst-plugins/desktop-vst3-openmpc/tools/install_mac_vst3.sh | bash -s -- --check
+```
+
 ## Build it yourself
 
 Ubuntu or WSL2 (Docker with QEMU for arm32v7; run it in the Linux home folder, not on a Windows drive):
