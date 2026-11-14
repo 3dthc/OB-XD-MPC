@@ -1,5 +1,7 @@
 # OB-Xd for MPC OS (unofficial port)
 
+[![Support me on Ko-fi](https://img.shields.io/badge/Support%20me%20on-Ko--fi-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/3dthc)
+
 A native ARM VST2 build of the OB-Xd synthesizer for first-generation Akai MPC / Force standalone units
 (developed and tested on an MPC Live II, MPC OS 3.x). Built with [sd88me/mpc-vst-plugins](https://github.com/sd88me/mpc-vst-plugins) (MIT).
 
