@@ -210,6 +210,7 @@ def write_bank(path, programs):
     open(path, "wb").write(body)
 
 
+DUPLICATES = {"Truimpher"}   # OB-Xf ships "Triumpher" twice, once misspelt (the same patch but for 0.001 of Volume)
 LEVELS_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cc0_levels.json")
 LEVELS = {}
 if os.path.exists(LEVELS_FILE) and "--no-levels" not in sys.argv:
@@ -259,6 +260,9 @@ def main():
             skipped[f] = "license is not CC0"
             continue
         row = (a.get("category", ""), unent(a.get("programName", os.path.basename(f))), unent(a.get("author", "")))
+        if row[1] in DUPLICATES:
+            skipped[f] = "a duplicate in the source set"
+            continue
         v, why = xf_to_xd(a)
         if v is not None:
             ok.append(row + (v,))

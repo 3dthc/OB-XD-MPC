@@ -828,23 +828,23 @@ def main():
         for (x0, y0, x1, y1), capkey, key, tsz, al in zip(BR_WELLS, ("br_bank_cap", "br_patch_cap", None),
                                                         ("br_bank", "br_patch", "pt_page"), (30, 30, 24), ("left", "left", "center")):
             if capkey:
-                L.append('readout cx=%d cy=%d w=%d h=%d label="" key=%s box=0 tsize=18 tcolor=%s talign=left tpad=8%s' % (
+                L.append('readout cx=%d cy=%d w=%d h=%d label="" key=%s box=0 tsize=22 tcolor=%s talign=left tpad=8%s' % (
                     (x0 + x1) // 2, Y_OFF + y0 + 14, x1 - x0 - 8, 24, capkey, th["cap"], wh))
             else:
-                L.append('readout cx=%d cy=%d w=%d h=%d label="" key=ui_cap_page box=0 tsize=18 tcolor=%s talign=center tpad=0%s' % (
+                L.append('readout cx=%d cy=%d w=%d h=%d label="" key=ui_cap_page box=0 tsize=22 tcolor=%s talign=center tpad=0%s' % (
                     (x0 + x1) // 2, Y_OFF + y0 + 14, x1 - x0 - 8, 24, th["cap"], wh))
             L.append('readout cx=%d cy=%d w=%d h=%d label="" key=%s box=0 tsize=%d tcolor=%s talign=%s tpad=%d%s' % (
                 (x0 + x1) // 2, Y_OFF + y0 + 42, x1 - x0 - 8, 38, key, tsz, th["disp"], al, 8 if al == "left" else 0, wh))
         ink_ = th["bink"]
         for (x0, y0, x1, y1), tkey in ((BR_BANKS, "br_bank_title"), (BR_PATCH, "br_patch_title")):
-            L.append('readout cx=%d cy=%d w=%d h=%d label="" key=%s box=0 tsize=24 tcolor=%s talign=center tpad=0%s' % (
+            L.append('readout cx=%d cy=%d w=%d h=%d label="" key=%s box=0 tsize=28 tcolor=%s talign=center tpad=0%s' % (
                 (x0 + x1) // 2, Y_OFF + y0 + 18, x1 - x0 - 16, 30, tkey, ink_, wh))
     for ti_ in range(nth):
         for sx, key in ((1036, "pt_pg_prev"), (1212, "pt_pg_next")):
             sd = "left" if "prev" in key else "right"
             L.append('button cx=%d cy=%d label="" key=%s img=images/sel_%s_off_%d.png img_on=images/sel_%s_on_%d.png w=%d h=%d when=theme:%d' % (
                 sx, Y_OFF + 42, key, sd, ti_, sd, ti_, SEL_BW, SEL_H, ti_))
-    TILE = 'tsize=24 tweight=semibold talign=left tx=22'
+    TILE = 'tsize=30 tweight=semibold talign=left tx=16'
     for ti_ in range(nth):
         tl = TILE + " tcolor=%s when=theme:%d" % (panel_draw.THEMES[ti_].get("tx", "f4f7fb"), ti_)
         L.append('list x=52 y=%d w=266 h=394 cols=1 rows=8 th=44 gap=6 key=bk img=images/tile_bk_off_%d.png img_on=images/tile_bk_on_%d.png %s' % (Y_OFF + 128, ti_, ti_, tl))

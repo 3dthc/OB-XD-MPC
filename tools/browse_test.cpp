@@ -65,12 +65,16 @@ int main(int argc, char **argv) {
     set("bk_scroll", "1"); set("pt_scroll", "2");
     ck(get("bank_name") == tile("bk_", 1), "knob plays within whichever bank is being looked at", get("bank_name"));
     set("pt_scroll", "1");
-    // paging in the 33-patch bank (the last bank)
+    // paging in the 32-patch bank (the last bank)
     set("bk_scroll", "4");
     ck(get("pt_page") == "1 / 2", "bank 4 has two pages", get("pt_page"));
     ck(tile("pt_", 24) != " ", "24 tiles on page 1", tile("pt_", 24));
+    int tri = 0;
+    for (int k = 1; k <= 24; k++) { std::string t = tile("pt_", k); tri += t == "Triumpher" || t == "Truimpher"; }
     set("pt_pg_next", "1"); set("pt_pg_next", "0");
-    ck(get("pt_page") == "2 / 2" && tile("pt_", 9) != " " && tile("pt_", 10) == " ", "page 2 has the other 9", get("pt_page") + " " + tile("pt_", 9));
+    ck(get("pt_page") == "2 / 2" && tile("pt_", 8) != " " && tile("pt_", 9) == " ", "page 2 has the other 8", get("pt_page") + " " + tile("pt_", 8));
+    for (int k = 1; k <= 24; k++) { std::string t = tile("pt_", k); tri += t == "Triumpher" || t == "Truimpher"; }
+    ck(tri == 1, "Triumpher is in the bank once (OB-Xf ships it twice, once misspelt)", std::to_string(tri));
     set("pt_pg_next", "1"); set("pt_pg_next", "0");
     ck(get("pt_page") == "2 / 2", "no page past the last", get("pt_page"));
     set("pt_pg_prev", "1"); set("pt_pg_prev", "0");

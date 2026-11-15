@@ -59,7 +59,7 @@ Banks 010-012 are exact conversions. Banks 013-017 (the ones ending in "2") use 
 | Super-Saw | Vincent Zauhar | Leads |
 | Unison Fear | Saif Sameer | Leads |
 
-## Pads+FX (33 patches)
+## Pads+FX (32 patches)
 
 | Patch | Author | Category |
 |---|---|---|
@@ -75,7 +75,6 @@ Banks 010-012 are exact conversions. Banks 013-017 (the ones ending in "2") use 
 | Might As Well... | EvilDragon | Brass |
 | Pursuit Mono | Saif Sameer | Brass |
 | Triumpher | Saif Sameer | Brass |
-| Truimpher | Saif Sameer | Brass |
 | Vuvuzela Jam | 0.5° | Winds |
 | Hold One Back | Ocean Swift | Soundscapes |
 | Saucer | Saif Sameer | Soundscapes |
