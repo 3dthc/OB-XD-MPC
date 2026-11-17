@@ -92,24 +92,6 @@ Ubuntu or WSL2 (Docker with QEMU for arm32v7; run it in the Linux home folder, n
 
 The skin is already generated and committed, so there is nothing else to run. Packaging and catalog listing: `docs/RELEASING.md`.
 
-## Regenerating the skin (optional)
-
-    python3 tools/make_skin.py skin-source/"Default Skin"             # Pillow needed: sudo apt install python3-pil
-
-You can point it at a theme from your own OB-Xd install. That is for your own device: those files are not ours to redistribute, so keep the
-output out of public releases.
-
-## More banks (optional, for your own device)
-
-The release ships the Moby Pixel bank (GPL) a bank of 35 patches written for this plugin (`018 - Classics`: brass stabs and swells, string machines, PWM pads, acid and sub basses, sync and glide leads, short arp-friendly plucks, effects) and eight banks of patches converted from OB-Xf's CC0 factory set (about 490 patches in the style of OB-Xd's own factory sounds, credits in `banks/CREDITS.md`; banks 013-017 use a few OB-Xf features OB-Xd lacks, so they are close to the originals rather than exact). OB-Xd's own factory banks belong to discoDSP and their authors, so they are not included. If you
-have OB-Xd installed (it is free from discoDSP), copy its `.fxb` files into a `my-banks` folder next to the plugin's `banks` folder on the MPC (create it; the plugin reads both):
-
-    /sdcard/Synths/sd88me - VST - OB-Xd/my-banks/
-
-Re-open the plugin and they show up in BANK, in file-name order. Patches still called "Default" or "Init" are hidden. The installer keeps
-that folder when you upgrade. Do not publish those files or a zip that contains them (`tools/make_releases.sh` can build such a zip for
-your own device, in `dist-private/`).
-
 ## Licence
 
 Code: GPL v3 (see `LICENSE`). Anyone you give a built plugin to is entitled to this source, so link to this repository wherever you share
