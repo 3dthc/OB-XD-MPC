@@ -42,5 +42,6 @@
   "au_manufacturer": "3Dth",
   "tile": "tile.png",
   "xpl_presets": "xpl",
-  "xpl_skip": "^-$"
+  "xpl_skip": "^-$",
+  "xpl_category": "^(?P<name>.*\\S)\\s*\\((?P<cat>[^()]+)\\)\\s*$"
 }
