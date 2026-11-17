@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<pluginstate>
+  <version file="1" date="2026-01-01-00-00"/>
+  <PLUGIN name="OB-Xd" descriptiveName="OB-Xd" format="VST" category="Synth" manufacturer="sd88me"
+          version="1.0" file="%payload-path%/sd88me - VST - OB-Xd/obxd.so" uid="4f625864" isInstrument="1" fileTime="0"
+          infoUpdateTime="0" numInputs="0" numOutputs="2" isShell="0"/>
+  <preset>Space Bass (Moby Pixel)</preset>
+  <state>1222.CMlaKA....fQBMDZ....A7jXXQF..L.5....A..............................................................................................................................................................................Al7lX3QVKyQWXzUFHwnfXg41Z8.CLv.RKfzzahkGHPkFdkwlKlgmXJ.WXzMFZe4VXsUVOSAWXiUFHBE1byo.bgQ2Xn0SMJHVXts1Wo4FYkgWOvnPagMGckI2WnoWOzPCLJPGZk0VY8.iB18Fa00VY8.iK0nfcuk1Xk80XuUmaz0CLtHCLv.CLv.CLyn.c04VY8.iK0nvaiQWX1UVOv3RMJHVYtQlbg41Yk0CLJHVYtQ1ayMlL8.iBrU1YgQ2as8FYk0CLJHVYtQFal8lbgQWY8.iK1.CLv.CLvHCMJXmYrQWYtYWOvnfcg0Fbk4lc8.iBgMGbrEVdkQVXrw1aiEFco8la8.iBv8lbzEVak4Fcu0CLJTmaoM2at0CLJTGYkQWOv3hLvfSMyDiLzXiBuM2Xx7EYkQWOv3BMxjCLwTiM1XiBrY1alIWYw0CLtDSNzLSLxPSN3n.al81bo41cgYWY8DiBrY1ayEWcgIWY2Elck0CLJvlYuMGZ2Elck0CLJvlYuESXsQWOv3BL1bCN2TCLvTyLJvlYuISXsQWOvn.al81ayMVL8.iBrY1auM2XxzCLJvlYuYVZrQWYx0SLJvlYuA2cwzCLJvlYuA2cxzCLJ71biICZy0CLJfWauQVOvnvayMVLv0CLJ71biICb8.iBuM2XwUWXtQWZ5UVOvnvayMVLyE1c8DiBuM2Xw.Wcr0CLJ71biIybgcWOwnvayMlLvUGa8.iBvcWOvnfXxk1YnQmakM2b8DiBk4lcvkFcigVOvnvayMVLskFd8DiBuM2XxzVZ30SLJ31aoMWYskFd8.iBlwFceslY8.iBiUGcuYlY8.iKyDSMxXSM0jiMJHWYy8lag41Xk0CLtXCLwTiMxPCMJzVcrQWZs8FYk0CLJXVZrQWYx80cgIWa8.iBhElajAWXyMWOvnfYuUmbv8Fak0CLJTla1UFauAWYeEVaz0CLtXyMvPCL1HiLxn.agQ2Z8.iBrQVYi0CLJv1b0MWOwn.axUFa8.iBlEFcq0CLJXFYkMVOv3RM1XyL0jyLzDiBlMWcy0CLJXlbkwVOvnPYtYGYkIWOv3xLv.CLv.CLwHiBlkFazUlbjUlb8.iKy.CLv.CLvDiLJ.2axQWXjUlb8.iKy.CLv.CLvDiLJ.WXtESOv3RMJ.WXtISOv3RMJ.WXtMSOv3RMJ.WXtQSOv3RMJ.WXtUSOv3RMJ.WXtYSOv3RMJ.WXtcSOv3RMJ.WXtgSOv3RMJT1Xu41ask2Ws8FYk0SLJvlYu80b441X8.iBvc2Wk4lc8.iBvc2Wk4lceI1azgVOvnPYtY2WvkFcig1Wh8Fcn0CLJXVYtY2Wo4lckIGc8.iBvc2WuM2Xx70alMWOvn.akYWYr8EYoYVOv3xLv.CLv.CLwHiByUFal80ayM1WvU2bn0CL..</state>
+</pluginstate>

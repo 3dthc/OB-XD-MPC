@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<pluginstate>
+  <version file="1" date="2026-01-01-00-00"/>
+  <PLUGIN name="OB-Xd" descriptiveName="OB-Xd" format="VST" category="Synth" manufacturer="sd88me"
+          version="1.0" file="%payload-path%/sd88me - VST - OB-Xd/obxd.so" uid="4f625864" isInstrument="1" fileTime="0"
+          infoUpdateTime="0" numInputs="0" numOutputs="2" isShell="0"/>
+  <preset>Filter Tone Drone (FX+Drums 2)</preset>
+  <state>1163.CMlaKA....fQBMDZ....A7jXXQF..L.5....A.............................................................................................................................................................................v.q+lX3QVKyQWXzUFHwnfXg41Z8.SL2.RKfXDVqPjb001bfHiKlgmXJ.WXzMFZe4VXsUVOFkFazUlbfP0atUFHDI2atUlBvEFcigVOznfXg41ZeklajUFd8fiBsE1bzUlbegld8PCMvn.cnUVak0CLJX2arUWak0CLtLCNyfSN4jCN2nfcuk1Xk80XuUmaz0CLtDCN2TiBzUmak0CLtTiBuMFcgYWY8.iKxTiBhUlajIWXtcVY8.iBhUlaj81biISOvn.akcVXz8VauQVY8.iBhUlajwlYuIWXzUVOv3hMxDSLyPCMJXmYrQWYtYWOvnfcg0Fbk4lc8.iBgMGbrEVdkQVXrw1aiEFco8la8DiBv8lbzEVak4Fcu0SLJTmaoM2at0SLJTGYkQWOwnvayMlLeQVYz0CLJvlYuYlbkEWOv3BL4jyM4HCLvLiMJvlYuMWZtcWX1UVOwn.al81bwUWXxU1cgYWY8.iBrY1ayg1cgYWY8.iBrY1awDVaz0CLtHSL4jSN4jSN4n.al8lLg0Fc8.iBrY1auM2XwzCLJvlYu81biISOvn.al8lYowFckIWOwn.al8Fb2ESOvn.al8Fb2ISOvnvayMlLnMWOvn.ds8FY8.iBuM2Xw.WOv3RMJ71biICb8.iK0nvayMVb0Elazkldk0CLJ71biEybgcWOwnvayMVLvUGa8.iBuM2XxLWX20SLJ71biICb0wVOvn.b20CLJHlbocFZz4VYyMWOwnPYtYGboQ2Xn0CLJ71biESaogWOwnvayMlLskFd8.iBt8VZyUVaogWOvnfYrQ2WqYVOvnvX0Q2alYVOv3xL2HCLv.CLvjiBxU1bu4VXtMVY8DiBsUGazkVauQVY8.iBlkFazUlbecWXx0VOvnfXg4FYvE1by0CLJX1a0IGbuwVY8DiBk4lckw1avU1Wg0Fc8.iK0TSL4jSN4fiMJvVXzsVOv3RL1fyMvjCNJvFYkMVOvn.ayU2b8DiBrIWYr0CLJXVXzsVOv3BLvPyLzPyMwPyLznfYjU1X8DiBlMWcy0CLJXlbkwVOvnPYtYGYkIWOwnfYowFckIGYkIWOwn.buIGcgQVYx0SLJ.WXtESOvn.bg4lL8DiBvElayzCLJ.WXtQSOwn.bg4VM8.iBvEla1zSLJ.WXtcSOvn.bg4FN8DiBkM1at8Va48UauQVY8DiBrY1aeMWdtMVOvn.b28UYtYWOvn.b28UYtY2Wh8Fcn0SLJTla18EboQ2Xn8kXuQGZ8DiBlUla18UZtYWYxQWOvn.b280ayMlLe8lYy0CLJvVY1UFaeQVZl0CLtHSMJLWYrY1WuM2XeAWcygVOv..</state>
+</pluginstate>

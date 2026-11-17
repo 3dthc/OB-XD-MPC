@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<pluginstate>
+  <version file="1" date="2026-01-01-00-00"/>
+  <PLUGIN name="OB-Xd" descriptiveName="OB-Xd" format="VST" category="Synth" manufacturer="sd88me"
+          version="1.0" file="%payload-path%/sd88me - VST - OB-Xd/obxd.so" uid="4f625864" isInstrument="1" fileTime="0"
+          infoUpdateTime="0" numInputs="0" numOutputs="2" isShell="0"/>
+  <preset>Okay Let's Go! (Moby Pixel)</preset>
+  <state>1166.CMlaKA....fQBMDZ....A7jXXQF..L.5....A.............................................................................................................................................................................v.t+lX3QVKyQWXzUFHwnfXg41Z8.CLv.RKfzzahkGHPkFdkwlKlgmXJ.WXzMFZe4VXsUVOOsVX4ABSkQ2IyAxQuEhBvEFcigVOvnfXg41ZeklajUFd8.iBsE1bzUlbegld8PCMvn.cnUVak0CLJX2arUWak0CLtTiB18VZiU1Wi8VctQWOv3hLv.CLv.CLvLiBzUmak0CLtTiBuMFcgYWY8.iK0nfXk4FYxElamUVOvnfXk4FYuM2XxzCLJvVYmEFcu01ajUVOvnfXk4FYrY1axEFck0CLtXCLv.CLv.iLznfclwFck4lc8.iB1EVavUla10CLJD1bvwVX4UFYgwFauMVXzk1at0CLJ.2axQWXsUlaz8VOvnPctk1bu4VOvnPcjUFc8.iKx.CLv.CLv.yLJ71biIyWjUFc8.iKz.CLv.CLv.iMJvlYuYlbkEWOvn.al81bo41cgYWY8.iBrY1ayEWcgIWY2Elck0CLJvlYuMGZ2Elck0CLJvlYuESXsQWOvn.al8lLg0Fc8.iBrY1auM2XwzCLJvlYu81biISOvn.al8lYowFckIWOvn.al8Fb2ESOvn.al8Fb2ISOvnvayMlLnMWOvn.ds8FY8.iBuM2Xw.WOvnvayMlLv0CLJ71biEWcg4FcooWY8.iBuM2XwLWX20SLJ71biECb0wVOvnvayMlLyE1c8DiBuM2Xx.Wcr0CLJ.2c8.iBhIWZmgFctU1by0SLJTla1AWZzMFZ8.iBuM2XwzVZ30SLJ71biISaogWOwnfauk1bk0VZ30CLJXFaz80Zl0CLJLVcz8lYl0SLJHWYy8lag41Xk0CLJzVcrQWZs8FYk0CLJXVZrQWYx80cgIWa8.iBhElajAWXyMWOvnfYuUmbv8Fak0CLJTla1UFauAWYeEVaz0CLJvVXzsVOvn.ajU1X8.iBrMWcy0SLJvlbkwVOvnfYgQ2Z8.iBlQVYi0CLJX1b0MWOvnfYxUFa8.iBk4lcjUlb8.iKy.CLv.CLvDiLJXVZrQWYxQVYx0CLtLCLv.CLv.SLxn.buIGcgQVYx0CLtLCLv.CLv.SLxn.bg4VL8.iK0n.bg4lL8.iK0n.bg41L8.iK0n.bg4FM8.iK0n.bg4VM8.iK0n.bg4lM8.iK0n.bg41M8.iK0n.bg4FN8.iK0nPYi8lau0Vde01ajUVOwn.al81Wykmai0CLJ.2ceUla10CLJ.2ceUla18kXuQGZ8.iBk4lceAWZzMFZeI1azgVOvnfYk4lcekla1Ulbz0CLJ.2ce81biIyWuY1b8.iBrUlckw1WjklY8.iKy.CLv.CLvDiLJLWYrY1WuM2XeAWcygVOv..</state>
+</pluginstate>

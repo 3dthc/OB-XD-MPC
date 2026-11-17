@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<pluginstate>
+  <version file="1" date="2026-01-01-00-00"/>
+  <PLUGIN name="OB-Xd" descriptiveName="OB-Xd" format="VST" category="Synth" manufacturer="sd88me"
+          version="1.0" file="%payload-path%/sd88me - VST - OB-Xd/obxd.so" uid="4f625864" isInstrument="1" fileTime="0"
+          infoUpdateTime="0" numInputs="0" numOutputs="2" isShell="0"/>
+  <preset>Moaning Wind (FX+Drums 2)</preset>
+  <state>1187.CMlaKA....fQBMDZ....A7jXXQF..L.5....A..............................................................................................................................................................................AC7lX3QVKyQWXzUFHwnfXg41Z8.SL2.RKfXDVqPjb001bfHiKlgmXJ.WXzMFZe4VXsUVOM8VXtklamAxUo4FYJ.WXzMFZ8DiLJHVXts1Wo4FYkgWO3nPagMGckI2WnoWOzPCLJPGZk0VY8.iB18Fa00VY8DiB18VZiU1Wi8VctQWOv3xLwHSMJPWctUVOv3RMJ71XzElck0CLtHSMJHVYtQlbg41Yk0CLJHVYtQ1ayMlL8.iBrU1YgQ2as8FYk0CLJHVYtQFal8lbgQWY8.iK1HSLwLCMznfclwFck4lc8.iB1EVavUla10CLJD1bvwVX4UFYgwFauMVXzk1at0SLJ.2axQWXsUlaz8VOvnPctk1bu4VOvnPcjUFc8.iKxXSNvHCL0HCNJ71biIyWjUFc8.iBrY1alIWYw0CLt.SNvDyM2PSNwLiBrY1aykla2Elck0SLJvlYuMWb0ElbkcWX1UVOvn.al81bncWX1UVOvn.al8VLg0Fc8.iKxLSL4jSN4jyLJvlYuISXsQWOvn.al81ayMVL8.iBrY1auM2XxzCLJvlYuYVZrQWYx0SLJvlYuA2cwzCLJvlYuA2cxzCLJ71biICZy0CLJfWauQVOvnvayMVLv0CLtTiBuM2Xx.WOv3RMJ71biEWcg4FcooWY8.iBuM2XwLWX20SLJ71biECb0wVOvnvayMlLyE1c8DiBuM2Xx.Wcr0CLJ.2c8.iBhIWZmgFctU1by0SLJTla1AWZzMFZ8.iBuM2XwzVZ30CLJ71biISaogWOvnfauk1bk0VZ30CLtjCM1LSL2XSLynfYrQ2WqYVOvnvX0Q2alYVOv3hLzLSN4jSN3fiBxU1bu4VXtMVY8DiBsUGazkVauQVY8.iBlkFazUlbecWXx0VOvnfXg4FYvE1by0CLJX1a0IGbuwVY8DiBk4lckw1avU1Wg0Fc8.iBrEFcq0CLt.SL1XSM3PCM0fiBrQVYi0CLJv1b0MWOwn.axUFa8.iBlEFcq0CLt.CLzLCMzbSLzLCMJXFYkMVOvnfYyU2b8DiBlIWYr0CLJTla1QVYx0CLtHSMJXVZrQWYxQVYx0CLtHSMJ.2axQWXjUlb8.iKxTiBvElawzCLtTiBvElaxzCLtTiBvElayzCLtTiBvElazzCLtTiBvEla0zCLtTiBvEla1zCLtTiBvEla2zCLtTiBvEla3zCLtTiBkM1at8Va48UauQVY8DiBrY1aeMWdtMVOvn.b28UYtYWOvn.b28UYtY2Wh8Fcn0SLJTla18EboQ2Xn8kXuQGZ8DiBlUla18UZtYWYxQWOvn.b280ayMlLe8lYy0CLJvVY1UFaeQVZl0CLtHSMJLWYrY1WuM2XeAWcygVOv..</state>
+</pluginstate>

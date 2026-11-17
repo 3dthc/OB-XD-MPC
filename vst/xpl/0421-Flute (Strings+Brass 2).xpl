@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<pluginstate>
+  <version file="1" date="2026-01-01-00-00"/>
+  <PLUGIN name="OB-Xd" descriptiveName="OB-Xd" format="VST" category="Synth" manufacturer="sd88me"
+          version="1.0" file="%payload-path%/sd88me - VST - OB-Xd/obxd.so" uid="4f625864" isInstrument="1" fileTime="0"
+          infoUpdateTime="0" numInputs="0" numOutputs="2" isShell="0"/>
+  <preset>Flute (Strings+Brass 2)</preset>
+  <state>1221.CMlaKA....fQBMDZ....A7jXXQF..L.5....A..............................................................................................................................................................................Ak7lX3QVKyQWXzUFHwnfXg41Z8.SL1.RKfLEcxklamM2JBIWXyMGHx3hY3IlBvEFcig1WtEVak0iQrUGcko.bgQ2Xn0SMwnfXg41ZeklajUFd8biBsE1bzUlbegld8PCMvn.cnUVak0CLJX2arUWak0CLtXCLv.CLv.iLznfcuk1Xk80XuUmaz0CLtLSLxTiBzUmak0CLtTiBuMFcgYWY8.iKxTiBhUlajIWXtcVY8.iBhUlaj81biISOvn.akcVXz8VauQVY8.iBhUlajwlYuIWXzUVOv3hMxDSLyPCMJXmYrQWYtYWOvnfcg0Fbk4lc8.iBgMGbrEVdkQVXrw1aiEFco8la8DiBv8lbzEVak4Fcu0CLJTmaoM2at0CLJTGYkQWOv3hL1jCLx.SMxfiBuM2Xx7EYkQWOvn.al8lYxUVb8.iKzjiLzHSN4biLJvlYuMWZtcWX1UVOwn.al81bwUWXxU1cgYWY8.iBrY1ayg1cgYWY8.iBrY1awDVaz0CLJvlYuISXsQWOvn.al81ayMVL8.iBrY1auM2XxzCLJvlYuYVZrQWYx0CLJvlYuA2cwzCLJvlYuA2cxzCLJ71biICZy0CLJfWauQVOvnvayMVLv0CLtTiBuM2Xx.WOv3RMJ71biEWcg4FcooWY8.iBuM2XwLWX20CLJ71biECb0wVOwnvayMlLyE1c8.iBuM2Xx.Wcr0CLJ.2c8.iBhIWZmgFctU1by0SLJTla1AWZzMFZ8.iBuM2XwzVZ30SLJ71biISaogWOvnfauk1bk0VZ30CLtPiM2PCNvXyLJXFaz80Zl0SLJLVcz8lYl0CLtDCL3.CLv.CLynfbkM2atElaiUVOv3BLyTSN4jSN4fSMJzVcrQWZs8FYk0CLJXVZrQWYx80cgIWa8.iBhElajAWXyMWOvnfYuUmbv8Fak0SLJTla1UFauAWYeEVaz0CLtHSNwjSN4jSN1n.agQ2Z8.iKwXCN2.SN3n.ajU1X8.iBrMWcy0SLJvlbkwVOv3hL1LSN4jSN4jiBlEFcq0CLt.CLzLCMzbSLzLCMJXFYkMVOvnfYyU2b8DiBlIWYr0CLtTyM0jSN4jyM0nPYtYGYkIWOv3hL0nfYowFckIGYkIWOv3hL0n.buIGcgQVYx0CLtHSMJ.WXtESOv3RMJ.WXtISOv3RMJ.WXtMSOv3RMJ.WXtQSOv3RMJ.WXtUSOv3RMJ.WXtYSOv3RMJ.WXtcSOv3RMJ.WXtgSOv3RMJT1Xu41ask2Ws8FYk0SLJvlYu80b441X8.iBvc2Wk4lc8.iBvc2Wk4lceI1azgVOvnPYtY2WvkFcig1Wh8Fcn0SLJXVYtY2Wo4lckIGc8.iBvc2WuM2Xx70alMWOvn.akYWYr8EYoYVOv3hL0nvbkwlYe81bi8Eb0MGZ8DC.</state>
+</pluginstate>
